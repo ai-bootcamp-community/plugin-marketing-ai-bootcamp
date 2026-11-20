@@ -20,7 +20,7 @@ slide někdo jiný; plátno, které se rozbije na dlouhém jménu nebo 140 skill
 
 ## Jak to běží (uživatelský tok)
 
-1. **Instalace (1 příkaz)** — z GitHubu, viz `plugins/ai-bootcamp-prezentace/README.md`.
+1. **Instalace (prompt pro agenta, nebo 1 příkaz)** — z GitHubu, viz `plugins/ai-bootcamp-prezentace/README.md`.
 2. **Osobní odkaz** — účastník se přihlásí do attendee app (kód z e-mailu, už existuje), otevře
    **Můj slide** a zkopíruje příkaz `/ai-bootcamp-prezentace https://app.aibootcamp.cz/s/<token>`.
 3. **Běh skillu** — agent lokálně projde nastavení (jen názvy a počty, obsah konverzací nikdy),
