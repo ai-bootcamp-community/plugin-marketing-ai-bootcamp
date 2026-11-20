@@ -23,8 +23,26 @@ Formát dat: `docs/website-prezentation/README.md` v repu `ai-bootcamp-community
 
 ### 2. Sběr
 
-Spusť `node <složka tohoto skillu>/scripts/sber.mjs` a výstup si přečti. U velkých historií může trvat
-sběr desítky sekund — řekni to předem. Bez Node.js (`node --version` selže) přeskoč na otázky v kroku 4 a stack sestav z odpovědí.
+Cíl sběru je vždy stejný — vyplnit tabulku „Co potřebuju zjistit“ v
+[`reference/zdroje.md`](reference/zdroje.md). Cesty jsou tři, v tomto pořadí:
+
+1. **Skript** (rychlá cesta): `node <složka tohoto skillu>/scripts/sber.mjs`. Spočítá Claude Code
+   a Codex za 30 dní (u velké historie desítky sekund — řekni to předem) a vrátí JSON s názvy,
+   popisy vlastních skillů/agentů a počty.
+2. **Vlastní průzkum** (agentní cesta) — když Node chybí, skript selže, nebo člověk používá nástroj,
+   který skript nezná (Cursor, Gemini CLI, Hermes, opencode, Copilot…), nebo výsledku chybí kus.
+   Postupuj podle `reference/zdroje.md`: kde co leží, jak to číst bezpečně, co nikdy.
+3. **Otázky** — co nejde zjistit (na co AI používá v práci, k čemu je který nástroj), se zeptej.
+
+Výsledky cest slož dohromady a u každého čísla si pamatuj, odkud je (skript / průzkum / odpověď).
+
+**Křížová kontrola skriptu průzkumem** (vždy, pár příkazů):
+- Profily, které skript vrátil, opravdu existují; nechybí žádný z `ls -d ~/.claude* ~/.codex*`.
+- Nástroj, který člověk zmíní nebo má aplikaci, a skript u něj vrátí 0 nebo nic → dohledej podle
+  `reference/zdroje.md`, případně se zeptej.
+- Počet konverzací ověř `find <profil>/projects -name '*.jsonl' -not -path '*/subagents/*' -mtime -30 | wc -l`
+  (± pár kusů je v pořádku). Velký rozdíl = chyba skriptu → věř průzkumu a řekni to člověku.
+- Čísla, která nedávají smysl (podíly modelů nedávají ~100 %, série > aktivní dny), neposílej.
 
 ### 3. Sestavení návrhu
 
@@ -42,23 +60,65 @@ Zdroj → pole slidu:
 
 Vlastní nebo firemní model piš jen jako „firemní model“ / „vlastní model“.
 
-### 4. Otázky (jedna zpráva, očíslované, s tvým doporučením u každé)
+### 4. Co jsem našel (vypiš, než se na cokoli zeptáš)
 
-1. Kterou z nalezených konfigurací je pracovní (je-li jich víc)?
-2. Firemní MCP a skilly na slide? Rozděl: běžné produkty (GitLab, Jira, Slack…) → doporuč ano;
-   interní nástroje → „ano, pokud ti nevadí“; volby všechno / jen doporučené / vybrat / nic.
-3. Heatmapa hodin na slide? (ano/ne)
-4. Tokeny do side questu „největší token spender“? (výchozí ne → `tokens: null`)
-5. Tvoje věta na slide, tip pro ostatní, úprava „Zeptej se mě na“.
-6. Barva (oranžová, modrá, zelená, růžová, žlutá, červená, nebo #hex).
-7. Formát slidu: **Přehled** (všechno, hutné) nebo **Hero** (velká věta + čísla). Doporuč Hero, když
-   má méně než 5 skillů a méně než 4 napojení, jinak Přehled. Ulož do `style.layout` (`prehled` / `hero`).
+Krátký přehled v obecných kategoriích, ne surová data. Každý řádek = něco, co může jít na slide:
 
-### 5. Náhled a souhlas
+| Co můžeš ukázat | Co jsem našel |
+| --- | --- |
+| Nástroje a modely | např. „Claude Code (Opus), Codex, ChatGPT app“ |
+| Na co AI používáš | 4–6 kategorií odvozených ze skillů |
+| Co máš nastavené | 3–5 vět řečí marketéra |
+| Skilly a napojení | počty + 3–5 příkladů; firemní zvlášť |
+| Čísla aktivity | konverzace, pomocníci, aktivní dny, kdy pracuješ |
+| Tokeny | přibližný počet za 30 dní |
+
+Je-li jasné, že část konverzací je automatika (desítky za den ve stejnou hodinu, víc než ~20 denně),
+řekni to a čísla aktivity označ jako zkreslená.
+
+### 5. Výběr (AskUserQuestion, je-li k dispozici; jinak stejné otázky jako očíslovaný seznam)
+
+Jedno volání, tyto čtyři otázky, u doporučené volby „(doporučeno)“:
+
+1. **Co na slide** (multiSelect): Nástroje a modely · Skilly a napojení · Čísla aktivity ·
+   Tokeny do side questu. Výchozí doporučení: první dvě; čísla jen když nejsou zkreslená.
+2. **Formát**: zvolil-li čísla nebo tokeny → **Přehled (doporučeno)**; jinak → **Hero bez čísel
+   (doporučeno)**: velká věta, nástroje, skilly a napojení jako čipy. Ulož do `style.layout`.
+3. **Firemní věci**: Ukázat názvy · Interní zobecnit (doporučeno) · Jen osobní.
+   (Pracovní = z profilu, který člověk označí; má-li víc profilů, zeptej se na to předem jednou větou.)
+4. **Barva**: Oranžová · Modrá · Zelená · Růžová (vlastní #hex přes „Other“).
+
+Co nezvolil, do JSON nedávej (`stats`, `did`, `models`, `tokens` vynech, ne nuly).
+
+### 6. Vlastní slova (volný text, jedna zpráva)
+
+Zeptej se na větu na slide, tip pro ostatní a 3 témata „Zeptej se mě na“. Ke každému nabídni 2–3
+hotové návrhy z nalezeného setupu, ať stačí odpovědět číslem. Vymyšlené texty před odesláním
+výslovně označ jako tvoje návrhy.
+
+**Nechtěl-li čísla aktivity ani tokeny**, slide stojí na člověku, ne na statistikách:
+- „Zeptej se mě na“ až **5 témat** a tipů až **3** (`tip` = první, další do `tips`).
+- Návrhy hledej v tom, čím je jeho setup **neobvyklý**, ne v tom, co má každý:
+  vlastní skilly (ne převzaté balíčky), automatizace (hooky, plánované běhy), napojení na
+  nečekané nástroje, druhý mozek / paměť, víc agentů najednou, kombinace nástrojů.
+- Každý návrh formuluj jako otázku, kterou by mu někdo v sále položil u kafe
+  („jak ti AI každé ráno připraví den“, „proč máš na kampaně vlastní skill“), max 60 znaků.
+- Nabídni 6–8 návrhů očíslovaně, ať si vybere a případně dopíše vlastní.
+
+### 7. Validace (smyčka, dokud neprojde)
+
+Ulož slide do `~/ai-bootcamp-slide.json` a spusť `node <složka skillu>/scripts/over.mjs ~/ai-bootcamp-slide.json`.
+- `CHYBA` → oprav přesně tu položku (zkrať, zobecni, vyhoď) a spusť znovu. Úniky (URL, e-mail,
+  cesta, token) vždy odstraň, nikdy je neobcházej přeformulováním.
+- `varování` → zvaž, případně řekni člověku.
+- Bez Node zkontroluj stejná pravidla ručně podle tabulky v `docs/website-prezentation/README.md`.
+Do náhledu jde až JSON, který prošel.
+
+### 7b. Náhled a souhlas
 
 Ukaž čitelné shrnutí slidu a pod ním přesně ten JSON, který odejde. Pošli až po výslovném „ano“.
 
-### 6. Odeslání
+### 8. Odeslání
 
 - S odkazem: `POST <base>/api/prezentace/slide`, hlavička `Authorization: Bearer <token>`,
   tělo JSON ze souboru (`curl -sS --fail-with-body -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" --data @slide.json …`).

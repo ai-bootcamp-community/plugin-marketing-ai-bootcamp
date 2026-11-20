@@ -1,6 +1,6 @@
 #!/bin/sh
 # Instalace skillu ai-bootcamp-prezentace z GitHubu do všech nalezených AI nástrojů.
-# Co dělá: stáhne SKILL.md a scripts/sber.mjs do složek skillů (Claude Code, Codex, ~/.agents).
+# Co dělá: stáhne SKILL.md, scripts/sber.mjs, scripts/over.mjs a reference/zdroje.md do složek skillů (Claude Code, Codex, ~/.agents).
 # Nic nespouští, nic neposílá. Spuštění: curl -fsSL <raw URL tohoto souboru> | sh
 set -eu
 RAW="https://raw.githubusercontent.com/ai-bootcamp-community/plugin-playground/main/plugins/ai-bootcamp-prezentace/skills/ai-bootcamp-prezentace"
@@ -17,11 +17,15 @@ tmp=$(mktemp -d)
 curl -fsSL "$RAW/SKILL.md" -o "$tmp/SKILL.md"
 mkdir -p "$tmp/scripts"
 curl -fsSL "$RAW/scripts/sber.mjs" -o "$tmp/scripts/sber.mjs"
+curl -fsSL "$RAW/scripts/over.mjs" -o "$tmp/scripts/over.mjs"
+mkdir -p "$tmp/reference"
+curl -fsSL "$RAW/reference/zdroje.md" -o "$tmp/reference/zdroje.md"
 
 for t in $targets; do
-  mkdir -p "$t/$NAME/scripts"
+  mkdir -p "$t/$NAME/scripts" "$t/$NAME/reference"
   cp "$tmp/SKILL.md" "$t/$NAME/SKILL.md"
-  cp "$tmp/scripts/sber.mjs" "$t/$NAME/scripts/sber.mjs"
+  cp "$tmp/scripts/sber.mjs" "$tmp/scripts/over.mjs" "$t/$NAME/scripts/"
+  cp "$tmp/reference/zdroje.md" "$t/$NAME/reference/zdroje.md"
   echo "nainstalováno: $t/$NAME"
 done
 rm -rf "$tmp"
