@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "name": "Jana Nováková",
+  "sentence": "Kampaň od briefu po report za odpoledne.",
+  "badge": "Obsahová továrna",
+  "tip": "Jeden skill na tón značky ušetří půl korektur.",
+  "tools": ["Claude Code", "ChatGPT"],
+  "uses": [["Texty a copy", 120], ["Kampaně a reklamy", 80], ["Data a reporty", 55], ["Výzkum trhu", 30]],
+  "setup": ["Vlastní skill na tón značky", "Report z Analytics každé pondělí sám", "Šablony briefů pro celý tým"],
+  "skills": { "total": 9, "work": ["ton-znacky", "brief-kampane"], "personal": ["copywriting", "ads-report", "seo-audit"] },
+  "mcp": { "work": ["interní CRM"], "personal": ["Google Ads", "Analytics", "Canva", "Notion"] },
+  "ask": ["skill na tón značky", "report z Analytics bez práce"],
+  "stats": {
+    "conversations": 412,
+    "helpers": 96,
+    "peak": "úterý 10:00",
+    "active_days": 18,
+    "streak": 6,
+    "heat": [
+      [0,0,0,0,0,0,0,2,6,11,14,9,4,3,5,6,3,1,0,0,0,0,0,0],
+      [0,0,0,0,0,0,1,3,8,13,15,10,5,4,6,5,2,1,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,2,7,12,13,9,4,4,5,6,3,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,1,2,6,10,12,8,3,3,4,4,2,1,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,1,4,8,9,6,2,2,3,2,1,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]
+    ]
+  },
+  "did": { "edits": 1240, "commands": 820, "web": 310 },
+  "models": [["Sonnet", 70], ["GPT", 30]],
+  "tokens": 4200000,
+  "style": { "layout": "prehled", "accent": "#ff5fa2" }
+}
