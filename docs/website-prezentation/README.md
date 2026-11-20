@@ -76,6 +76,10 @@ jinak **Přehled**. Chybí-li `style.layout` nebo je neznámý, použije se `pre
 - uprostřed velkým písmem věta (`sentence`) a pod ní barvou člověka „Tip: …“ (`tip`);
 - řada čísel: konverzace za 30 dní, pomocníci, úpravy souborů za mě (`did.edits`), čipy napojení
   (max 6 + „+N“);
+- **Hero bez čísel** (chybí `stats` i `did` — účastník čísla nechtěl): místo řady čísel tři řady čipů
+  „V čem jedu“ (`tools`), „Moje skilly“ (top 6 + „+N“), „Napojeno na“ (max 6 + „+N“);
+  místo jednoho tipu blok „Tipy ode mě“ (`tip` + `tips`, max 3) a „Zeptej se mě na“ až 5 témat
+  ve dvou řadách — slide stojí na člověku, ne na statistikách;
 - dole pruh „Zeptej se mě na →“.
 - Chybí-li `sentence`, místo ní „Nejvíc: *první položka uses*“.
 
@@ -124,12 +128,13 @@ Příklad: `priklad-slide.json` v téhle složce.
 | `sentence` | text ≤ 120 | ne | vlastní věta účastníka |
 | `badge` | text ≤ 30 | ne | štítek („Ranní ptáče“) |
 | `tip` | text ≤ 120 | ne | tip pro ostatní |
+| `tips` | pole ≤ 2 textů ≤ 120 | ne | další tipy (hlavně u slidu bez čísel) |
 | `tools` | pole ≤ 6 textů ≤ 30 | ano | seřazené podle používání; první = skupina |
 | `uses` | pole ≤ 6 `[text ≤ 40, číslo ≥ 0]` | ne | „na co AI používám“ + váha |
 | `setup` | pole ≤ 5 textů ≤ 90 | ne | „co mám nastavené“ lidsky |
 | `skills` | `{ total: int, work: [≤ 12 × text ≤ 40], personal: [≤ 12 × text ≤ 40] }` | ne | |
 | `mcp` | `{ work: [≤ 16], personal: [≤ 16] }` texty ≤ 40 | ne | jen názvy |
-| `ask` | pole ≤ 3 textů ≤ 60 | ne | „Zeptej se mě na“ |
+| `ask` | pole ≤ 5 textů ≤ 60 | ne | „Zeptej se mě na“; Přehled ukáže první 3, Hero bez čísel všech 5 |
 | `stats.conversations` | int | ne | 30 dní |
 | `stats.helpers` | int | ne | spuštění subagentů, 30 dní |
 | `stats.peak` | text ≤ 20 | ne | „pátek 6:00“ |

@@ -17,6 +17,14 @@ const isDir = p => { try { return fs.statSync(p).isDirectory(); } catch { return
 const readJson = p => { try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; } };
 const real = p => { try { return fs.realpathSync(p); } catch { return p; } };
 const ls = p => { try { return fs.readdirSync(p); } catch { return []; } };
+// Jen `description` z hlavičky (frontmatter) souboru, max 200 znaků; tělo se nečte.
+function describe(file) {
+  let head = "";
+  try { const fd = fs.openSync(file, "r"); const b = Buffer.alloc(4096); head = b.toString("utf8", 0, fs.readSync(fd, b, 0, 4096, 0)); fs.closeSync(fd); } catch { return null; }
+  const fm = head.startsWith("---") ? head.split(/\n---/)[0] : "";
+  const m = fm.match(/^description:\s*(.+)$/m);
+  return m ? m[1].replace(/^["']|["']$/g, "").slice(0, 200) : null;
+}
 
 // Veřejné modely zkrátí na rodinu, vlastní/firemní nahradí obecným štítkem.
 function modelLabel(name) {
@@ -47,7 +55,8 @@ function sessionFiles(root) {
 const SEEN = new Set(); // sdílené/symlinkované složky mezi profily nepočítat dvakrát
 function newUsage() {
   return { sessions: 0, heat: Array.from({ length: 7 }, () => Array(24).fill(0)), days: new Set(),
-           did: { edits: 0, commands: 0, web: 0 }, helpers: 0, skills: {}, models: {}, tokens: 0 };
+           did: { edits: 0, commands: 0, web: 0 }, helpers: 0, skills: {}, models: {}, tokens: 0,
+           helper_types: {}, helper_did: { edits: 0, commands: 0, web: 0 }, helper_models: {}, helper_tokens: 0 };
 }
 function addSession(u, file, mtime) {
   const r = real(file);
@@ -60,32 +69,43 @@ function addSession(u, file, mtime) {
   return true;
 }
 const ACTION = { Edit: "edits", MultiEdit: "edits", Write: "edits", NotebookEdit: "edits", Bash: "commands", WebSearch: "web", WebFetch: "web" };
-const RE_TOOL = /"type":"tool_use","id":"[^"]*","name":"([^"]+)"(?:,"input":\{"(skill|subagent_type)":"([^"]+)")?/g;
-// odpověď modelu: "message":{"model":"…","id":"msg_…" … "usage":{"input_tokens":N, … "output_tokens":M
-// jedna odpověď se v logu zapisuje víckrát se stejným id → počítat jednou (poslední zápis má konečné usage)
-const RE_MSG = /"message":\{"model":"([^"]+)","id":"([^"]+)"/;
-const RE_IN = /"input_tokens":(\d+)/, RE_OUT = /"output_tokens":(\d+)/;
+// Odpovědi modelu se čtou z rozparsovaného JSON: pořadí polí se liší podle brány/modelu
+// (u vlastních modelů přes bránu je "model" až za obsahem), regex by je minul.
+// Jedna odpověď se v logu zapisuje víckrát se stejným id → počítat jednou (poslední zápis má konečné usage).
 
-function scanClaudeLog(u, file) {
+function scanClaudeLog(u, file, sub = false) {
   let text;
   try { text = fs.readFileSync(file, "utf8"); } catch { return; }
-  for (const m of text.matchAll(RE_TOOL)) {
-    const name = m[1];
-    if (ACTION[name]) u.did[ACTION[name]]++;
-    if (name === "Agent" || name === "Task") u.helpers++;
-    if (name === "Skill" && m[2] === "skill") u.skills[m[3]] = (u.skills[m[3]] || 0) + 1;
-  }
-  const msgs = new Map();
+  const msgs = new Map(), tools = new Map();
   for (const line of text.split("\n")) {
-    if (!line.includes('"message":{"model"')) continue;
-    const m = line.match(RE_MSG);
-    if (!m) continue;
-    msgs.set(m[2], [m[1], Number((line.match(RE_IN) || [])[1] || 0) + Number((line.match(RE_OUT) || [])[1] || 0)]);
+    if (!line.includes('"assistant"')) continue;
+    let msg;
+    try { msg = JSON.parse(line).message; } catch { continue; }
+    if (!msg || msg.role !== "assistant") continue;
+    if (msg.model && msg.id) {
+      const us = msg.usage || {};
+      msgs.set(msg.id, [msg.model, (Number(us.input_tokens) || 0) + (Number(us.output_tokens) || 0)]);
+    }
+    for (const part of Array.isArray(msg.content) ? msg.content : []) {
+      if (part && part.type === "tool_use" && part.id) tools.set(part.id, [part.name, part.input || {}]);
+    }
+  }
+  for (const [name, input] of tools.values()) {
+    if (ACTION[name]) { u.did[ACTION[name]]++; if (sub) u.helper_did[ACTION[name]]++; }
+    if (name === "Agent" || name === "Task") {
+      u.helpers++;
+      // typ pomocníka: obecné a pluginové názvy ukázat, vlastní agenty jen jako „vlastní agent“
+      const t = typeof input.subagent_type === "string" ? input.subagent_type : "general-purpose";
+      const k = /^(general-purpose|Explore|Plan|claude|statusline-setup|claude-code-guide)$/.test(t) || t.includes(":") ? t : "vlastní agent";
+      u.helper_types[k] = (u.helper_types[k] || 0) + 1;
+    }
+    if (name === "Skill" && typeof input.skill === "string") u.skills[input.skill] = (u.skills[input.skill] || 0) + 1;
   }
   for (const [model, tok] of msgs.values()) {
     const l = modelLabel(model);
     if (l) u.models[l] = (u.models[l] || 0) + 1;
     u.tokens += tok;
+    if (sub) { if (l) u.helper_models[l] = (u.helper_models[l] || 0) + 1; u.helper_tokens += tok; }
   }
 }
 
@@ -99,6 +119,9 @@ function finish(u) {
   const total = Object.values(u.models).reduce((a, b) => a + b, 0) || 1;
   const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]);
   return { sessions: u.sessions, active_days: days.length, streak: best, heat: u.heat, did: u.did, helpers: u.helpers,
+           helpers_detail: { types: Object.entries(u.helper_types).sort((a, b) => b[1] - a[1]).slice(0, 8), did: u.helper_did,
+             models_pct: (t => Object.entries(u.helper_models).sort((a, b) => b[1] - a[1]).map(([m, c]) => [m, Math.round(c * 100 / t)]))(Object.values(u.helper_models).reduce((a, b) => a + b, 0) || 1),
+             tokens: u.helper_tokens },
            skills_used: top(u.skills).slice(0, 15),
            models_pct: top(u.models).slice(0, 5).map(([m, c]) => [m, Math.round(c * 100 / total)]),
            tokens: u.tokens };
@@ -116,6 +139,11 @@ function claudeProfile(p) {
   const plugins = Object.entries(s.enabledPlugins || {}).filter(([, v]) => v).map(([k]) => k.split("@"));
   const skills = ls(path.join(p, "skills")).filter(d => exists(path.join(p, "skills", d, "SKILL.md"))).sort();
   const agents = ls(path.join(p, "agents")).filter(f => f.endsWith(".md")).map(f => f.slice(0, -3)).sort();
+  // popisy vlastních skillů a agentů: podklad pro „na co AI používám“ a „Zeptej se mě na“
+  const descriptions = Object.fromEntries([
+    ...skills.map(d => [`skill:${d}`, describe(path.join(p, "skills", d, "SKILL.md"))]),
+    ...agents.map(a => [`agent:${a}`, describe(path.join(p, "agents", `${a}.md`))]),
+  ].filter(([, v]) => v));
   const hooks = Object.values(s.hooks || {}).flat().reduce((a, h) => a + ((h && h.hooks) || []).length, 0);
   const envKeys = Object.keys(s.env || {}); // jen přítomnost klíčů, ne hodnoty
   let state = readJson(path.join(p, ".claude.json"));
@@ -125,11 +153,11 @@ function claudeProfile(p) {
   const u = newUsage();
   // subagent = pomocník: jeho práce, modely a tokeny se počítají, ale není to samostatná konverzace
   for (const [f, mt, sub] of sessionFiles(path.join(p, "projects"))) {
-    if (sub) { if (!SEEN.has(real(f))) { SEEN.add(real(f)); scanClaudeLog(u, f); } }
+    if (sub) { if (!SEEN.has(real(f))) { SEEN.add(real(f)); scanClaudeLog(u, f, true); } }
     else if (addSession(u, f, mt)) scanClaudeLog(u, f);
   }
   return { tool: "Claude Code", path: tilde(p), active, model: modelLabel(s.model),
-           plugins: plugins.map(([n, m]) => [n, m || ""]), skills, agents, hooks,
+           plugins: plugins.map(([n, m]) => [n, m || ""]), skills, agents, descriptions, hooks,
            custom_gateway: envKeys.includes("ANTHROPIC_BASE_URL") || envKeys.includes("ANTHROPIC_CUSTOM_MODEL_OPTION"),
            mcp: [...mcp].sort(), usage: finish(u) };
 }
