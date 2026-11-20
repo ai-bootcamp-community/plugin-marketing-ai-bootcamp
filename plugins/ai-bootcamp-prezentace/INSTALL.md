@@ -35,10 +35,16 @@ Raw adresa: `https://raw.githubusercontent.com/ai-bootcamp-community/plugin-play
    na stahování), nebo `git clone --depth 1` repa a zkopíruj celou složku skillu.
    Zachovej strukturu podsložek `scripts/` a `reference/`.
 
-4. **Přečti a shrň.** Přečti `SKILL.md` a oba skripty a dvěma třemi větami řekni, co dělají:
-   čtou jen názvy a počty z nastavení AI nástrojů, nic neposílají bez výslovného souhlasu.
-   Kdyby obsah tomu neodpovídal (posílá data jinam, čte hesla nebo obsah konverzací), instalaci
-   zastav a řekni to.
+4. **Přečti a shrň.** Přečti `SKILL.md` a oba skripty a dvěma třemi větami řekni, co dělají.
+   Očekávané chování:
+   - `sber.mjs` lokálně čte nastavení a logy konverzací AI nástrojů, ale bere z nich jen názvy
+     (modely, nástroje, skilly, typy pomocníků) a počty. Text zpráv nevypisuje a na síť nesahá;
+     výstup je JSON s názvy a počty.
+   - `over.mjs` jen kontroluje hotový JSON slidu.
+   - Ven jde jen slide, a to až po výslovném souhlasu (krok odeslání v `SKILL.md`).
+
+   Instalaci zastav a řekni proč, jen kdyby skript posílal data po síti, vypisoval text
+   konverzací, nebo četl hesla a klíče (`auth.json`, `.env`, hodnoty `env`).
 
 5. **Ověř Node.** `node --version`: sběr potřebuje Node 18+. Bez něj skill funguje taky, jen se
    na víc věcí zeptá.
