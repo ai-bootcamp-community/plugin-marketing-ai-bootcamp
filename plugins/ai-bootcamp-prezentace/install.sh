@@ -11,6 +11,7 @@ targets="$HOME/.claude/skills"
 for d in "$HOME"/.claude-*; do [ -f "$d/settings.json" ] && targets="$targets $d/skills"; done
 [ -d "$HOME/.codex" ] && targets="$targets $HOME/.codex/skills"
 [ -n "${CODEX_HOME:-}" ] && targets="$targets ${CODEX_HOME}/skills"
+[ -d "$HOME/.hermes" ] && targets="$targets $HOME/.hermes/skills"
 targets="$targets $HOME/.agents/skills"   # Copilot CLI, Gemini CLI a další čtou ~/.agents/skills
 
 tmp=$(mktemp -d)

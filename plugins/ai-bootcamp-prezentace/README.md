@@ -7,19 +7,31 @@ a po tvém souhlasu ho pošle do attendee app, odkud se promítá. Stav: **draft
 **Vyzkoušeno:** sběr dat (`scripts/sber.mjs`) na macOS s Claude Code a Codexem. Celý tok se skillem zatím ne.
 **Autor:** Martin Žatkovič.
 
-## Instalace (jeden příkaz)
+## Instalace (vlož agentovi)
+
+Vlož do svého agenta (Claude Code, Codex, Hermes, Cursor…):
+
+```text
+Nainstaluj mi skill ai-bootcamp-prezentace z repa
+https://github.com/ai-bootcamp-community/plugin-playground.
+Postupuj podle plugins/ai-bootcamp-prezentace/INSTALL.md v tom repu.
+```
+
+Agent si návod ([`INSTALL.md`](INSTALL.md)) stáhne z GitHubu, vybere složku skillů svého nástroje,
+ukáže, co kam kopíruje, přečte skripty a řekne ti, co dělají. Nic nespouští ani neposílá.
+
+**Bez agenta, jedním příkazem** (Claude Code všech profilů, Codex, Hermes a `~/.agents/skills`):
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/ai-bootcamp-community/plugin-playground/main/plugins/ai-bootcamp-prezentace/install.sh | sh
 ```
 
-Skript stáhne `SKILL.md` a `scripts/sber.mjs` do složek skillů Claude Code (všech profilů), Codexu
-a `~/.agents/skills`. Nic nespouští ani neposílá — přečti si ho předem: [`install.sh`](install.sh).
+Přečti si ho předem: [`install.sh`](install.sh).
 
 ## Použití
 
 1. V attendee app otevři **Můj slide** a zkopíruj příkaz s osobním odkazem.
-2. V Claude Code nebo Codexu spusť `/ai-bootcamp-prezentace https://app.aibootcamp.cz/s/<token>`.
+2. Ve svém agentovi spusť `/ai-bootcamp-prezentace https://app.aibootcamp.cz/s/<token>`.
 3. Odpověz na pár otázek, zkontroluj náhled, potvrď odeslání.
 
 ## Co skill čte a co posílá
