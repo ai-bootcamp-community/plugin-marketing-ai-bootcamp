@@ -20,6 +20,7 @@ Složka tohoto skillu = `<skill>`. Pracovní složka člověka: `~/ai-bootcamp-m
 | `<skill>/reference/mereni.md` | jak počítat správně (`/compact`, pomocníci, duplicity, automatika) |
 | `<skill>/reference/redakce.md` | co je vždy ven, co navrhnout ke smazání, formát redakce |
 | `<skill>/examples/` | **vzory** skriptů (+ README) — přečti, přizpůsob, spusť svou kopii |
+| `<skill>/scripts/vloz.mjs` | vloží `data.json` do šablony → `prezentace.html` |
 | `<skill>/scripts/kontrola.mjs` | kontrola úniků v `data.json` / `prezentace.html` |
 | `<skill>/templates/prezentace.html` | šablona s ukázkovou personou |
 
@@ -66,9 +67,10 @@ Navrhni `lead` větu (lidsky, bez žargonu) — schvaluje se se sekcí.
 Barva a motiv: nabídni oranžovou/modrou/zelenou/růžovou, tmavý/světlý.
 
 ### 8. Výroba
-Zkopíruj `<skill>/templates/prezentace.html` do `~/ai-bootcamp-mastermind/prezentace.html`
-a nahraď **jen obsah** datového bloku (`<script type="application/json" id="data">`) schváleným
-JSON, ve kterém je každé `<` nahrazené `<`. Nic jiného v šabloně neměň.
+`node <skill>/scripts/vloz.mjs ~/ai-bootcamp-mastermind/data.json ~/ai-bootcamp-mastermind/prezentace.html`
+— vloží schválená data do šablony (jen datový blok, se správným escapováním, práva 600).
+Šablonu ručně neupravuj. Bez Node: do datového bloku vlož JSON, ve kterém je každý znak
+„menší než“ zapsaný jako unicode escape (zpětné lomítko, `u003c`), jinak text v datech může blok ukončit.
 
 ### 9. Kontrola úniků
 `node <skill>/scripts/kontrola.mjs ~/ai-bootcamp-mastermind/prezentace.html` (a `data.json`).
@@ -91,4 +93,6 @@ Nález → oprav v datech, vlož znovu, spusť znovu. Bez Node zkontroluj vzory 
 - Absolutní cesty ve struktuře druhého mozku — ukazuj relativně.
 - Hledat MCP jen v `.claude.json` — konektory claude.ai jsou jen v logu (`mcp__claude_ai_*`).
 - Heatmapa a „ranní ptáče“ z automatiky — odděl `entrypoint` jiné než `cli`.
+- Počítat obaly (`<task-notification>`, `<bash-stdout>`, `<local-command-stdout>`…) jako zprávy
+  člověka — u autora to bylo 23 % „zpráv“ (viz `mereni.md`).
 - Technický žargon v `lead` větách — pointa musí dávat smysl i bez znalosti nástroje.

@@ -21,11 +21,16 @@ function modelLabel(name) {
   return "vlastní model";
 }
 
-// Zpráva člověka: ne meta, ne shrnutí po /compact (to psala AI), ne pomocník, ne výsledek nástroje.
+// Obaly, které harness zapisuje jako „user“, ale nenapsal je člověk (oznámení, výstupy příkazů).
+// Na Martinově profilu (2026-11-21) to bylo 23 % „zpráv“. <command-name> a <bash-input> nechat:
+// to jsou akce člověka (lomítkový příkaz, ! příkaz).
+const OBALY = /^\s*<(task-notification|local-command-stdout|local-command-stderr|local-command-caveat|bash-stdout|bash-stderr|system-reminder)>/;
+
+// Zpráva člověka: ne meta, ne shrnutí po /compact (to psala AI), ne pomocník, ne výsledek nástroje, ne obal.
 function jeZpravaCloveka(z) {
   if (z.type !== "user" || z.isMeta || z.isCompactSummary || z.isSidechain) return false;
   const c = z.message && z.message.role === "user" ? z.message.content : null;
-  if (typeof c === "string") return c.trim().length > 0;
+  if (typeof c === "string") return c.trim().length > 0 && !OBALY.test(c);
   return Array.isArray(c) && c.some(p => p && p.type === "text");
 }
 
@@ -38,6 +43,7 @@ export function rozeberKonverzaci(text) {
     if (!radek.trim()) continue;
     let z;
     try { z = JSON.parse(radek); } catch { continue; } // rozepsaný poslední řádek běžící session
+    if (!z || typeof z !== "object") continue;
     if (z.timestamp) { k.zacatek ??= z.timestamp; k.konec = z.timestamp; }
     if (!k.entrypoint && typeof z.entrypoint === "string") k.entrypoint = z.entrypoint;
     if (z.type === "system" && z.subtype === "compact_boundary") {
@@ -122,7 +128,11 @@ export function souhrnProfilu(cestaProfilu, dni = 30) {
     s.konverzace.celkem++;
     pricti(s.konverzace.podle_entrypointu, k.entrypoint || "neznámý");
     s.zpravy_cloveka += k.zpravyCloveka.length;
-    for (const t of k.zpravyCloveka) { const d = new Date(t); s.heat[(d.getDay() + 6) % 7][d.getHours()]++; dny.add(den(t)); }
+    for (const t of k.zpravyCloveka) {
+      const d = new Date(t);
+      if (!Number.isFinite(d.getTime())) continue; // zpráva bez času: počítá se, ale ne do heatmapy
+      s.heat[(d.getDay() + 6) % 7][d.getHours()]++; dny.add(den(t));
+    }
     if (k.zacatek) pricti(s.tydny, isoTyden(k.zacatek));
     odpovedi(k);
     const datum = k.zacatek ? den(k.zacatek) : null;

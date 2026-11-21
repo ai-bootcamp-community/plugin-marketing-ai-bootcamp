@@ -22,7 +22,13 @@ v okně (výchozí 30 dní podle mtime). Nepočítej `subagents/*.jsonl` jako ko
 
 **Zpráva člověka:** `type: "user"`, `message.role: "user"`, **ne** `isMeta`, **ne**
 `isCompactSummary`, **ne** `isSidechain`, a obsah je text (řetězec nebo část `type: "text"`).
-Část `type: "tool_result"` je výsledek nástroje, ne člověk.
+Část `type: "tool_result"` je výsledek nástroje, ne člověk. **Obaly harnessu** zapsané jako
+`user` s textem začínajícím `<task-notification>`, `<local-command-stdout>`, `<local-command-stderr>`,
+`<local-command-caveat>`, `<bash-stdout>`, `<bash-stderr>`, `<system-reminder>` nenapsal člověk —
+nepočítej je (ověřeno 2026-11-21: 425 z 1 806 textových „zpráv“, tj. 23 %). `<command-name>`
+(lomítkový příkaz) a `<bash-input>` (`!` příkaz) jsou akce člověka — počítej.
+Zpráva bez `timestamp` se počítá, ale nejde do heatmapy ani aktivních dnů.
+Řádek, který není JSON objekt, přeskoč.
 
 **Odpovědi a volání se zapisují víckrát:** jedna odpověď modelu má víc řádků se stejným
 `message.id` (každá část obsahu zvlášť, `usage` se dopisuje). Počítej podle `message.id`

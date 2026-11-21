@@ -41,6 +41,29 @@ test("souběh pomocníků počítá volání ze stejné odpovědi zapsaná na v�
     content: [{ type: "tool_use", id, name: "Agent", input: { subagent_type: "Explore" } }] } });
   assert.equal(rozeberKonverzaci([r("a"), r("b"), r("c")].join("\n")).maxSoubeznychPomocniku, 3);
 });
+test("řádek, který není objekt (null, číslo), se přeskočí", () => {
+  const k = rozeberKonverzaci('null\n42\n{"type":"user","message":{"role":"user","content":"a"},"timestamp":"2026-11-10T08:00:00Z"}');
+  assert.equal(k.zpravyCloveka.length, 1);
+});
+test("zpráva bez timestamp neshodí souhrn a nezapočte se do heatmapy", async () => {
+  const fs = await import("node:fs"), os = await import("node:os");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-")), proj = path.join(dir, "projects", "p");
+  fs.mkdirSync(proj, { recursive: true });
+  fs.writeFileSync(path.join(proj, "x.jsonl"), '{"type":"user","message":{"role":"user","content":"a"}}\n');
+  const s2 = souhrnProfilu(dir, 30);
+  assert.equal(s2.zpravy_cloveka, 1);
+  assert.equal(s2.heat.flat().reduce((a, b) => a + b, 0), 0);
+});
+test("obaly systému a výstupy příkazů nejsou zprávy člověka", () => {
+  const u = c => JSON.stringify({ type: "user", message: { role: "user", content: c }, timestamp: "2026-11-10T08:00:00Z" });
+  const k = rozeberKonverzaci([
+    u("<task-notification>hotovo</task-notification>"), u("<local-command-stdout>x</local-command-stdout>"),
+    u("<bash-stdout>x</bash-stdout><bash-stderr></bash-stderr>"), u("<bash-stderr>x</bash-stderr>"),
+    u("<local-command-caveat>x</local-command-caveat>"), u("<system-reminder>x</system-reminder>"),
+    u("<command-name>/compact</command-name>"), u("<bash-input>ls</bash-input>"), u("normální zpráva"),
+  ].join("\n"));
+  assert.equal(k.zpravyCloveka.length, 3); // příkaz, ! příkaz a normální zpráva jsou akce člověka
+});
 test("nevalidní řádek neshodí rozbor", () => {
   const k = rozeberKonverzaci('{"type":"user","message":{"role":"user","content":"a"},"timestamp":"2026-11-10T08:00:00Z"}\n{"type":"assis');
   assert.equal(k.zpravyCloveka.length, 1);

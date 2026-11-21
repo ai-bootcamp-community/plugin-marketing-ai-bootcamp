@@ -16,6 +16,7 @@ examples/README.md
 examples/cc-konverzace.mjs
 examples/cc-nastaveni.mjs
 scripts/kontrola.mjs
+scripts/vloz.mjs
 templates/prezentace.html
 ```
 
@@ -37,7 +38,7 @@ Raw adresa: `https://raw.githubusercontent.com/ai-bootcamp-community/plugin-play
 2. **Ukaž plán.** Napiš cílovou cestu `<složka>/ai-bootcamp-mastermind/` a seznam souborů.
    Existuje-li tam už starší verze, řekni, že ji přepíšeš.
 
-3. **Stáhni a ulož.** Deset souborů z raw adresy (`curl -fsSL … -o …` nebo vlastním nástrojem
+3. **Stáhni a ulož.** Jedenáct souborů z raw adresy (`curl -fsSL … -o …` nebo vlastním nástrojem
    na stahování), nebo `git clone --depth 1` repa a zkopíruj celou složku skillu.
    Zachovej podsložky `reference/`, `examples/`, `scripts/`, `templates/`.
 
@@ -50,7 +51,10 @@ Raw adresa: `https://raw.githubusercontent.com/ai-bootcamp-community/plugin-play
      (a id souborů kandidátů na čtení). Text zpráv, hodnoty `env` ani adresy serverů nevypisují.
    - Před vytvořením prezentace člověk **po sekcích schvaluje**, co v ní bude (redakce).
    - Výsledek je HTML soubor v `~/ai-bootcamp-mastermind/`. Nic se nikam neposílá; šablona
-     nenačítá nic z internetu. `kontrola.mjs` jen hledá úniky v hotovém souboru.
+     nenačítá nic z internetu. `vloz.mjs` jen vloží data do šablony, `kontrola.mjs` jen hledá
+     úniky v hotovém souboru.
+   - `cc-nastaveni.mjs` otevírá `.claude.json` (kde bývá i účet), ale vypisuje z něj jen
+     názvy MCP serverů — to je v pořádku.
 
    Instalaci zastav a řekni proč, jen kdyby něco posílalo data po síti, četlo hesla a klíče
    (`auth.json`, `.env`, hodnoty `env`), nebo šablona načítala něco z internetu.
