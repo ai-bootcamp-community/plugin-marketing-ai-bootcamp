@@ -1,0 +1,4 @@
+{
+  "mcpServers": { "gmail": { "type": "http", "url": "https://tajne.cz/mcp" } },
+  "projects": { "/Users/tajny/projekt": { "mcpServers": { "lokalni-db": { "command": "npx", "args": ["tajne"] } } } }
+}
