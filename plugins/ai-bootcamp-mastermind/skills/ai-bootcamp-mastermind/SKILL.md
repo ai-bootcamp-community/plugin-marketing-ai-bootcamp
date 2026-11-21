@@ -1,0 +1,94 @@
+---
+name: ai-bootcamp-mastermind
+description: Use when the user runs /ai-bootcamp-mastermind or wants a deep-dive HTML presentation of how they work with AI (skills, orchestration, MCP, second brain, CLAUDE.md, memories) for an AI BOOTCAMP mastermind session.
+---
+
+# AI BOOTCAMP · mastermind deep dive
+
+Projdeš AI setup člověka, najdeš data k 19 tématům, **s ním je po sekcích zrediguješ** a vyrobíš
+lokální HTML prezentaci, která funguje sama (jeden soubor, šipky). Na mastermindu ukazuje, **jak**
+s AI pracuje — skilly zevnitř, orchestraci, napojení, druhý mozek, pravidla, vývoj.
+Komunikuj česky. Nic se nikam neposílá.
+
+Složka tohoto skillu = `<skill>`. Pracovní složka člověka: `~/ai-bootcamp-mastermind/`
+(`data.json`, `prezentace.html`, dočasně `work/`; soubory s daty práva 600).
+
+| Soubor | K čemu |
+| --- | --- |
+| `<skill>/reference/temata.md` | 19 témat (`id`, co hledat, bloky) + formát dat |
+| `<skill>/reference/setupy.md` | kde co leží pro Claude Code, Codex, Hermes… |
+| `<skill>/reference/mereni.md` | jak počítat správně (`/compact`, pomocníci, duplicity, automatika) |
+| `<skill>/reference/redakce.md` | co je vždy ven, co navrhnout ke smazání, formát redakce |
+| `<skill>/examples/` | **vzory** skriptů (+ README) — přečti, přizpůsob, spusť svou kopii |
+| `<skill>/scripts/kontrola.mjs` | kontrola úniků v `data.json` / `prezentace.html` |
+| `<skill>/templates/prezentace.html` | šablona s ukázkovou personou |
+
+## Postup
+
+### 1. Úvod
+Jednou zprávou řekni, co projdeš (nastavení AI nástrojů, konverzace za 30 dní, CLAUDE.md,
+memories, druhý mozek), že vše zůstane u něj v `~/ai-bootcamp-mastermind/`, že před výrobou HTML
+spolu projdete redakci a že sběr chvíli trvá. Zeptej se jen na to, co nejde zjistit: jméno a roli
+na titulní slide.
+
+### 2. Setupy
+Podle `setupy.md` najdi nástroje a profily (`ls -d ~/.claude* ~/.codex* ~/.hermes ~/.cursor …`).
+Víc profilů → jednou se zeptej, který je pracovní a jestli ukázat oba.
+
+### 3. Sběr
+- Přečti `examples/README.md` a vzory. Zkopíruj je do `~/ai-bootcamp-mastermind/work/`,
+  uprav na nalezené profily a spusť své kopie. Výstup jsou jen agregace a kandidáti.
+- K tématům, která vzory nepokrývají, dopiš vlastní malý skript podle `mereni.md` nebo použij
+  shell (`ls`, `jq 'keys'`, `grep` na klíče) — vždy jen názvy a počty.
+- Obsah čti **dvoufázově** (`mereni.md`): u kandidátů jen výseky, `CLAUDE.md`, memories
+  a strukturu druhého mozku celé. Do konverzace s člověkem nevypisuj surové logy.
+- Výsledek průběžně skládej do `~/ai-bootcamp-mastermind/data.json` podle formátu v `temata.md`.
+  U každého čísla si pamatuj zdroj.
+
+### 4. Křížová kontrola
+Počet konverzací ověř `find` (viz `mereni.md`). Počty, které nedávají smysl, neukazuj.
+U `entrypoint` jiného než `cli` se zeptej, jestli jde o jeho automatiku.
+
+### 5. Přehled
+Tabulka „téma → co jsem našel (jeden řádek)“ pro všech 19 témat (u chybějících „nenašel jsem“).
+Zeptej se, která témata vynechat. Pak nabídni kandidáty pro 17 (nejlepší/nejhorší moment)
+a potvrzení 19 (co chce postavit dál) — vždy vybírá člověk.
+
+### 6. Redakce po sekcích
+Pro každou sekci zprávu ve formátu z `redakce.md`: **Co tam je** (přesně, co půjde do HTML),
+**Navrhuju** (konkrétní položky s důvodem), **Vždy ven** (už odstraněno), **Volby**.
+Klidně 2–3 sekce v jedné zprávě, ať to netrvá věčnost. Bez schválení sekce nejde dál.
+Navrhni `lead` větu (lidsky, bez žargonu) — schvaluje se se sekcí.
+
+### 7. Titul a závěr
+`meta`: jméno, role, hlavní nástroje, jedna věta „o čem je můj deep dive“ (nabídni 2–3 návrhy).
+`closing.ask` z tématu 19 („S čím chci poradit“), `closing.takeaways` 2–3 tipy (navrhni).
+Barva a motiv: nabídni oranžovou/modrou/zelenou/růžovou, tmavý/světlý.
+
+### 8. Výroba
+Zkopíruj `<skill>/templates/prezentace.html` do `~/ai-bootcamp-mastermind/prezentace.html`
+a nahraď **jen obsah** datového bloku (`<script type="application/json" id="data">`) schváleným
+JSON, ve kterém je každé `<` nahrazené `<`. Nic jiného v šabloně neměň.
+
+### 9. Kontrola úniků
+`node <skill>/scripts/kontrola.mjs ~/ai-bootcamp-mastermind/prezentace.html` (a `data.json`).
+Nález → oprav v datech, vlož znovu, spusť znovu. Bez Node zkontroluj vzory z `redakce.md` ručně.
+
+### 10. Předání a úklid
+- Smaž `~/ai-bootcamp-mastermind/work/` a řekni to. `data.json` zůstává (jen schválená data,
+  pro pozdější úpravy).
+- Otevři prezentaci (`open` na macOS, `xdg-open` na Linuxu) a řekni: šipky/mezerník listují,
+  `#5` v adrese otevře slide 5, tisk do PDF dá slide na stránku.
+- Úprava později: „uprav sekci X“ → změň `data.json`, znovu kroky 8–9.
+
+## Časté chyby
+
+- Shrnutí po `/compact` (`isCompactSummary`) citovat jako slova člověka — psala ho AI.
+- Přičítat `preTokens` k tokenům — je to velikost kontextu.
+- Počítat `/compact` nebo `subagents/*.jsonl` jako nové konverzace.
+- Souběh pomocníků počítat po řádcích — volání jedné odpovědi jsou na víc řádcích se stejným `message.id`.
+- Číst všechny logy celé — drahé a zbytečné; jen kandidáti a výseky.
+- Absolutní cesty ve struktuře druhého mozku — ukazuj relativně.
+- Hledat MCP jen v `.claude.json` — konektory claude.ai jsou jen v logu (`mcp__claude_ai_*`).
+- Heatmapa a „ranní ptáče“ z automatiky — odděl `entrypoint` jiné než `cli`.
+- Technický žargon v `lead` větách — pointa musí dávat smysl i bez znalosti nástroje.
