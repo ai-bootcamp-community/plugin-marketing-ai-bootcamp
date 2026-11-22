@@ -12,16 +12,52 @@ const demo = nactiData(html, SOUBOR);
 
 const TEMATA = ["mapa", "skilly", "orchestrace", "konverzace", "mcp", "projekty", "brain", "claude-md", "memories",
   "ai-vs-prace", "vyvoj", "den", "sama-vs-ja", "mantinely", "modely", "kontext", "momenty", "sdileni", "plany"];
-const TYPY = ["text", "list", "chips", "stat", "bars", "heatmap", "flow", "conversation", "code", "timeline"];
+const TYPY = ["text", "list", "chips", "stat", "bars", "heatmap", "flow", "conversation", "code", "timeline", "mermaid", "table", "tree"];
 
-function rozdelNaSlidy() {
-  const m = /<script id="rozdeleni">([\s\S]*?)<\/script>/.exec(html);
-  assert.ok(m, "chybí <script id=\"rozdeleni\">");
+// Vytáhne čistou funkci ze <script id="…"> a spustí ji ve vm; výsledek převede přes JSON
+// (pole z vm mají jiný prototyp, deepEqual by je nepovažoval za shodná).
+function funkce(idSkriptu, jmeno) {
+  const m = new RegExp(`<script id="${idSkriptu}">([\\s\\S]*?)<\\/script>`).exec(html);
+  assert.ok(m, `chybí <script id="${idSkriptu}">`);
   const ctx = {};
-  vm.runInNewContext(m[1] + "\nthis.rozdelNaSlidy = rozdelNaSlidy;", ctx);
-  // pole z vm mají jiný prototyp → převést přes JSON, ať deepEqual porovná hodnoty
-  return data => JSON.parse(JSON.stringify(ctx.rozdelNaSlidy(data)));
+  vm.runInNewContext(m[1] + `\nthis.f = ${jmeno};`, ctx);
+  return (...a) => JSON.parse(JSON.stringify(ctx.f(...a)));
 }
+const rozdelNaSlidy = () => funkce("rozdeleni", "rozdelNaSlidy");
+const parseMermaid = funkce("mermaid", "parseMermaid");
+
+test("mermaid: flowchart LR s tvary, popiskem hrany a čárkovanou šipkou", () => {
+  const g = parseMermaid("flowchart LR\n  A[Já] -->|zadání| B(Agent)\n  B -.-> C{Pomocníci}");
+  assert.equal(g.smer, "LR");
+  assert.deepEqual(g.uzly, [{ id: "A", label: "Já", tvar: "obdelnik" }, { id: "B", label: "Agent", tvar: "kulaty" }, { id: "C", label: "Pomocníci", tvar: "kosoctverec" }]);
+  assert.deepEqual(g.hrany, [{ z: "A", do: "B", label: "zadání", carkovana: false }, { z: "B", do: "C", label: "", carkovana: true }]);
+});
+test("mermaid: graph TD, řetěz na jednom řádku a uzel bez tvaru", () => {
+  const g = parseMermaid("graph TD\nA --> B --> C\nB --> D[Konec]");
+  assert.equal(g.smer, "TD");
+  assert.equal(g.hrany.length, 3);
+  assert.deepEqual(g.uzly.find(u => u.id === "A"), { id: "A", label: "A", tvar: "obdelnik" });
+});
+test("mermaid: neznámý typ diagramu → null (zobrazí se jako kód)", () =>
+  assert.equal(parseMermaid("sequenceDiagram\nA->>B: ahoj"), null));
+test("mermaid: neznámá syntaxe řádku → null", () => assert.equal(parseMermaid("flowchart LR\nA ~~~ B ??? C"), null));
+test("mermaid: popisek s HTML zůstane textem", () =>
+  assert.equal(parseMermaid("flowchart LR\nA[\"<b>x</b>\"] --> B")?.uzly[0].label, "<b>x</b>"));
+test("mermaid: komentáře a style řádky se ignorují", () =>
+  assert.equal(parseMermaid("flowchart LR\n%% komentář\nA --> B\nstyle A fill:#f00")?.hrany.length, 1));
+
+test("rozdělení: prázdné table, tree a mermaid se vynechají", () => {
+  const sl = rozdelNaSlidy()({ meta: {}, sections: [{ id: "a", blocks: [
+    { type: "table", columns: ["x"], rows: [] }, { type: "tree", items: [] }, { type: "mermaid", text: "" }] }] });
+  assert.deepEqual(sl.map(s => s.typ), ["titul"]);
+});
+test("rozdělení: velký blok (mermaid/table/tree) + nejvýš jeden malý na slide", () => {
+  const T = { type: "table", columns: ["x"], rows: [["1"]] }, M = { type: "mermaid", text: "graph LR\nA-->B" }, X = { type: "text", text: "x" };
+  const pocty = bloky => rozdelNaSlidy()({ meta: {}, sections: [{ id: "a", blocks: bloky }] }).filter(s => s.typ === "sekce").map(s => s.bloky.length);
+  assert.deepEqual(pocty([M, T]), [1, 1]);
+  assert.deepEqual(pocty([M, X, X]), [2, 1]);
+  assert.deepEqual(pocty([X, X, X, X, X]), [3, 2]);
+});
 
 test("demo data jsou verze 1", () => assert.equal(demo.version, 1));
 test("demo pokrývá všech 19 témat", () => assert.deepEqual(demo.sections.map(s => s.id), TEMATA));

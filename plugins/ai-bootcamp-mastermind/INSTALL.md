@@ -47,8 +47,10 @@ Raw adresa: `https://raw.githubusercontent.com/ai-bootcamp-community/plugin-play
    - Skill dělá **osobní deep dive**: agent při běhu lokálně čte nastavení AI nástrojů,
      `CLAUDE.md`, memories, strukturu druhého mozku a **vybrané výseky konverzací**. To je
      záměr, ne chyba — bez toho deep dive nejde.
-   - Vzory v `examples/` čtou logy konverzací a nastavení, ale vypisují jen názvy a počty
-     (a id souborů kandidátů na čtení). Text zpráv, hodnoty `env` ani adresy serverů nevypisují.
+   - Vzory v `examples/` čtou logy konverzací a nastavení, ale vypisují jen názvy a počty,
+     id souborů kandidátů na čtení a pár krátkých popisků (úkoly pomocníků, ukázky pravidel
+     povolení, popisy skillů) se zamaskovanými cestami. Text zpráv, zadání pomocníků, hodnoty
+     `env` ani adresy serverů nevypisují.
    - Před vytvořením prezentace člověk **po sekcích schvaluje**, co v ní bude (redakce).
    - Výsledek je HTML soubor v `~/ai-bootcamp-mastermind/`. Nic se nikam neposílá; šablona
      nenačítá nic z internetu. `vloz.mjs` jen vloží data do šablony, `kontrola.mjs` jen hledá

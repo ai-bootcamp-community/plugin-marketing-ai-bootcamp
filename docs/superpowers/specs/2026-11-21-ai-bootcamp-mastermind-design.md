@@ -230,3 +230,29 @@ k souborům, názvy repozitářů, `auth.json`/`.env` obsah. Regulární výrazy
 - Vizuální podoba šablony a přesné schéma JSON (v rámci typů bloků výše).
 - Formulace v SKILL.md a referencích, pokud zachová pravidla.
 - Ověření hodnot `entrypoint` a formátů Codexu na reálných datech.
+
+## v2 · zpětná vazba z prvního běhu (Martin, 2026-11-22)
+
+Martin vygeneroval prezentaci ve svém pracovním profilu a chce **systémové** změny skillu
+(prezentaci neupravovat). Po sekcích:
+
+| Sekce | Změna |
+| --- | --- |
+| mapa | graf, jak setup funguje (mermaid) |
+| skilly | víc skillů; které mají kód (Python/Node/shell) a kolik; rozbor nejpoužívanějšího skillu s kódem (co dělají jeho skripty) |
+| orchestrace | schéma (mermaid) + co pomocníci řešili v poslední době (krátké popisy úkolů) |
+| konverzace | víc ukázek (3 různé typy) |
+| projekty | detailní přehled: projekt, konverzací, naposledy, o čem |
+| brain | struktura jako strom s počty, ne odrážky |
+| claude-md | víc detailu: sekce instrukcí → co říkají, víc citací |
+| memories | ukázky záznamů + srovnání, kde všude si AI pamatuje (memory, brain, CLAUDE.md, jiné nástroje) |
+| den | dvě heatmapy: člověk vs. automatika |
+| mantinely | ukázky konkrétních povolení a zákazů |
+| momenty | nejlepší + nejhorší + 5 z posledního týdne |
+
+**Moje volba:** mermaid se v šabloně vykresluje vlastním kódem pro podmnožinu syntaxe (flowchart
+LR/TD, uzly `[ ]` `( )` `{ }`, šipky `-->` `-.->` s popiskem `|…|`). Knihovna mermaid má několik MB
+a z CDN by porušila „nic z internetu“. Co podmnožina neumí, ukáže se jako kód.
+Nové bloky: `mermaid`, `table`, `tree`. Vzory nově vypisují i **krátké popisy úkolů pomocníků**
+(`description`, max 80 znaků) a **ukázky pravidel permissions** (cesty zamaskované) — obojí jde
+přes redakci.

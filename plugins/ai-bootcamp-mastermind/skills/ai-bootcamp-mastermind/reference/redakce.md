@@ -27,6 +27,11 @@ Nález **odstraň nebo zobecni**, nikdy ho neobcházej přeformulováním.
 | CLAUDE.md, memories | celé pasáže | shrnutí v bodech + max. 2–3 krátké citace |
 | Struktura druhého mozku | absolutní cesta, názvy složek s klienty | relativně (`brain/projects/`), klienty zobecnit |
 | Témata konverzací | konkrétní projekt nebo člověk | kategorie („kampaně“, „reporty“) |
+| Názvy projektů | název složky (zakódovaná cesta), jméno klienta | lidský název („Podzimní kampaň“), klienta zobecnit |
+| Popisy úkolů pomocníků | „Oprav fakturu pro (firma)“ | „Oprava faktury pro klienta“ |
+| Pravidla permissions | `Bash(ssh prod-db-01:*)`, interní hosty | přeložit do lidské řeči („nesmí na produkční servery“); výňatek bez hostů |
+| Ukázky memories | „Šéf je (jméno), nemá rád…“ | preference ano, lidi a vztahy pryč |
+| Rozbor skriptů skillu | názvy interních API, endpointy | co skript dělá, ne kam volá |
 
 Na pochybnost navrhni zobecnění, ne smazání — deep dive bez obsahu nikomu nepomůže.
 

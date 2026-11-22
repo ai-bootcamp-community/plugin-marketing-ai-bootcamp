@@ -26,6 +26,9 @@ function modelLabel(name) {
 // to jsou akce člověka (lomítkový příkaz, ! příkaz).
 const OBALY = /^\s*<(task-notification|local-command-stdout|local-command-stderr|local-command-caveat|bash-stdout|bash-stderr|system-reminder)>/;
 
+// Absolutní cesty v krátkých popiscích nahradí „…“ (popisy úkolů pomocníků jdou do redakce).
+export const zamaskuj = t => t.replace(/(~\/|\/Users\/|\/home\/|\/root\/|\/Volumes\/|[A-Z]:\\)\S*/g, "…");
+
 // Zpráva člověka: ne meta, ne shrnutí po /compact (to psala AI), ne pomocník, ne výsledek nástroje, ne obal.
 function jeZpravaCloveka(z) {
   if (z.type !== "user" || z.isMeta || z.isCompactSummary || z.isSidechain) return false;
@@ -68,6 +71,9 @@ export function rozeberKonverzaci(text) {
       if (p.name === "Skill" && typeof vstup.skill === "string") n.skill = vstup.skill;
       if (p.name === "Agent" || p.name === "Task") {
         n.subagent = typeof vstup.subagent_type === "string" ? vstup.subagent_type : "general-purpose";
+        // jediný text ze vstupu: krátký popis úkolu (pole description, 3–5 slov), ne zadání (prompt)
+        if (typeof vstup.description === "string") n.popis = zamaskuj(vstup.description).slice(0, 80);
+        n.cas = z.timestamp || null;
         const klic = msg.id || p.id;
         const ids = souběh.get(klic) || new Set();
         ids.add(p.id); souběh.set(klic, ids);
@@ -116,11 +122,12 @@ export function souhrnProfilu(cestaProfilu, dni = 30) {
   const { hlavni, pomocnici: soubPom } = souboryKonverzaci(path.join(cestaProfilu, "projects"), od);
   const s = { profil_nazev: path.basename(cestaProfilu), okno_dni: dni,
     konverzace: { celkem: 0, podle_entrypointu: {} }, zpravy_cloveka: 0, aktivni_dny: 0,
-    heat: Array.from({ length: 7 }, () => Array(24).fill(0)), modely: {}, tokeny: 0,
-    pomocnici: { celkem: 0, typy: {}, max_soubezne: 0 }, skilly: {}, mcp: {},
+    heat: Array.from({ length: 7 }, () => Array(24).fill(0)),
+    heat_automatika: Array.from({ length: 7 }, () => Array(24).fill(0)), modely: {}, tokeny: 0,
+    pomocnici: { celkem: 0, typy: {}, max_soubezne: 0, posledni: [] }, skilly: {}, mcp: {},
     compact: { konverzaci_s_compact: 0, celkem: 0, manual: 0, auto: 0, preTokens_prumer: 0 },
-    tydny: {}, prvni_vyskyt: { skilly: {}, mcp: {} }, kandidati: [] };
-  const dny = new Set(), pre = [], radky = [];
+    tydny: {}, prvni_vyskyt: { skilly: {}, mcp: {} }, projekty: [], kandidati: [] };
+  const dny = new Set(), pre = [], radky = [], ukoly = [], projekty = new Map();
   const odpovedi = k => { for (const o of k.odpovedi.values()) { const l = modelLabel(o.model); if (l) pricti(s.modely, l); s.tokeny += o.tokeny; } };
 
   for (const f of hlavni) {
@@ -128,11 +135,20 @@ export function souhrnProfilu(cestaProfilu, dni = 30) {
     s.konverzace.celkem++;
     pricti(s.konverzace.podle_entrypointu, k.entrypoint || "neznámý");
     s.zpravy_cloveka += k.zpravyCloveka.length;
+    // Člověk = entrypoint "cli" nebo chybí; ostatní (např. sdk-cli) = spuštěno programem/automatikou.
+    const clovek = !k.entrypoint || k.entrypoint === "cli";
     for (const t of k.zpravyCloveka) {
       const d = new Date(t);
       if (!Number.isFinite(d.getTime())) continue; // zpráva bez času: počítá se, ale ne do heatmapy
-      s.heat[(d.getDay() + 6) % 7][d.getHours()]++; dny.add(den(t));
+      (clovek ? s.heat : s.heat_automatika)[(d.getDay() + 6) % 7][d.getHours()]++;
+      if (clovek) dny.add(den(t));
     }
+    const pid = path.basename(path.dirname(f));
+    const p = projekty.get(pid) || { projekt_id: pid, konverzaci: 0, zprav_cloveka: 0, posledni: "" };
+    p.konverzaci++; p.zprav_cloveka += k.zpravyCloveka.length;
+    if (k.konec && den(k.konec) > p.posledni) p.posledni = den(k.konec);
+    projekty.set(pid, p);
+    for (const n of k.nastroje.values()) if (n.popis && n.cas) ukoly.push({ cas: n.cas, typ: n.subagent, popis: n.popis });
     if (k.zacatek) pricti(s.tydny, isoTyden(k.zacatek));
     odpovedi(k);
     const datum = k.zacatek ? den(k.zacatek) : null;
@@ -145,13 +161,20 @@ export function souhrnProfilu(cestaProfilu, dni = 30) {
     if (k.compact.length) s.compact.konverzaci_s_compact++;
     for (const c of k.compact) { s.compact.celkem++; s.compact[c.trigger]++; pre.push(c.preTokens); }
     radky.push({ soubor_id: path.basename(f, ".jsonl"), zprav_cloveka: k.zpravyCloveka.length, compact: k.compact.length,
-                 pomocniku: [...k.nastroje.values()].filter(n => n.subagent).length });
+                 pomocniku: [...k.nastroje.values()].filter(n => n.subagent).length, konec: k.konec || "" });
   }
   // Přepisy pomocníků: jen modely a tokeny (práce AI), ne konverzace ani zprávy člověka.
   for (const f of soubPom) { try { odpovedi(rozeberKonverzaci(fs.readFileSync(f, "utf8"))); } catch {} }
 
   s.aktivni_dny = dny.size;
   s.compact.preTokens_prumer = pre.length ? Math.round(pre.reduce((a, b) => a + b, 0) / pre.length) : 0;
+  s.projekty = [...projekty.values()].sort((a, b) => b.konverzaci - a.konverzaci).slice(0, 20);
+
+  // „Poslední týden“ = 7 dní před koncem nejnovější konverzace v datech (ne před dneškem).
+  const nejnovejsi = radky.reduce((m, r) => (r.konec > m ? r.konec : m), "");
+  const odTydne = nejnovejsi ? new Date(Date.parse(nejnovejsi) - 7 * 864e5).toISOString() : "";
+  s.pomocnici.posledni = ukoly.filter(u => u.cas >= odTydne).sort((a, b) => b.cas.localeCompare(a.cas))
+    .slice(0, 15).map(u => ({ datum: den(u.cas), typ: u.typ, popis: u.popis }));
 
   // Kandidáti na čtení (dvoufázové čtení): agent pak čte jen tyhle soubory, ne všechny.
   const vyber = (duvod, serazene, kolik) => serazene.slice(0, kolik).forEach(r =>
@@ -162,7 +185,8 @@ export function souhrnProfilu(cestaProfilu, dni = 30) {
   vyber("nejvíc pomocníků", sZpravami.filter(r => r.pomocniku > 0).sort((a, b) => b.pomocniku - a.pomocniku), 2);
   const podleDelky = [...sZpravami].sort((a, b) => a.zprav_cloveka - b.zprav_cloveka);
   vyber("typická", podleDelky.slice(Math.floor(podleDelky.length / 2)), 3);
-  s.kandidati = s.kandidati.slice(0, 10);
+  vyber("poslední týden", sZpravami.filter(r => r.konec >= odTydne).sort((a, b) => b.zprav_cloveka - a.zprav_cloveka), 5);
+  s.kandidati = s.kandidati.slice(0, 15);
   return s;
 }
 

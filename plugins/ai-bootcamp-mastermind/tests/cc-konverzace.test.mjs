@@ -24,7 +24,8 @@ test("skilly a MCP podle volání", () => {
 test("entrypoint odliší automatické běhy", () => assert.deepEqual(s.konverzace.podle_entrypointu, { cli: 1, "sdk-cli": 1 }));
 test("heatmapa sčítá zprávy člověka", () => {
   assert.equal(s.heat.length, 7);
-  assert.equal(s.heat.flat().reduce((a, b) => a + b, 0), 3);
+  const soucet = h => h.flat().reduce((a, b) => a + b, 0);
+  assert.equal(soucet(s.heat) + soucet(s.heat_automatika), 3); // v2: člověk + automatika
 });
 test("modely včetně pomocníků", () => assert.deepEqual(Object.keys(s.modely).sort(), ["Haiku", "Opus", "Sonnet"]));
 test("první výskyt skillu a MCP", () => {
@@ -35,6 +36,30 @@ test("kandidáti nesou jen id a čísla", () => {
   const k = s.kandidati.find(x => x.duvod === "nejdelší");
   assert.deepEqual(k, { soubor_id: "s1", duvod: "nejdelší", zprav_cloveka: 2, compact: 1 });
 });
+test("v2: heatmapa člověka a automatiky zvlášť", () => {
+  assert.equal(s.heat.flat().reduce((a, b) => a + b, 0), 2);
+  assert.equal(s.heat_automatika.flat().reduce((a, b) => a + b, 0), 1);
+  assert.equal(s.aktivni_dny, 1);
+});
+test("v2: konverzace bez entrypoint je člověk", async () => {
+  const fs = await import("node:fs"), os = await import("node:os");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mm-")), proj = path.join(dir, "projects", "p");
+  fs.mkdirSync(proj, { recursive: true });
+  fs.writeFileSync(path.join(proj, "x.jsonl"), '{"type":"user","message":{"role":"user","content":"a"},"timestamp":"2026-11-10T08:00:00Z"}\n');
+  const s2 = souhrnProfilu(dir, 30);
+  assert.equal(s2.heat.flat().reduce((a, b) => a + b, 0), 1);
+  assert.equal(s2.heat_automatika.flat().reduce((a, b) => a + b, 0), 0);
+});
+test("v2: poslední úkoly pomocníků s popisem, cesty zamaskované", () => {
+  assert.deepEqual(s.pomocnici.posledni, [
+    { datum: "2026-11-10", typ: "Explore", popis: "Rešerše konkurence" },
+    { datum: "2026-11-10", typ: "general-purpose", popis: "Uprav …" },
+  ]);
+});
+test("v2: přehled projektů", () =>
+  assert.deepEqual(s.projekty, [{ projekt_id: "-proj-a", konverzaci: 2, zprav_cloveka: 3, posledni: "2026-11-11" }]));
+test("v2: kandidáti z posledního týdne", () =>
+  assert.ok(s.kandidati.some(k => k.duvod === "poslední týden" && k.soubor_id === "s1")));
 test("výstup neobsahuje text zpráv", () => assert.doesNotMatch(JSON.stringify(s), /TAJNY_TEXT/));
 test("souběh pomocníků počítá volání ze stejné odpovědi zapsaná na víc řádků", () => {
   const r = id => JSON.stringify({ type: "assistant", message: { id: "m1", role: "assistant", model: "claude-opus-5-5",

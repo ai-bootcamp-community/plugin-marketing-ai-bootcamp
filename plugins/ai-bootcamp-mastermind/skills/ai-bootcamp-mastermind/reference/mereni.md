@@ -52,7 +52,25 @@ Další hodnoty neověřeny. Desítky konverzací ve stejnou
 hodinu každý den nebo víc než ~20 denně = pravděpodobně automatika → odděl od ručních, jinak
 heatmapa a „ranní ptáče“ ukazují ingest, ne člověka.
 
-**Čas:** heatmapa a aktivní dny z `timestamp` zpráv člověka v lokálním čase.
+**Čas:** heatmapa a aktivní dny z `timestamp` zpráv člověka v lokálním čase. **Dvě heatmapy:**
+`heat` = konverzace s `entrypoint` `cli` nebo bez něj (člověk), `heat_automatika` = ostatní
+(`sdk-cli`…). Aktivní dny jen z člověka.
+
+**Poslední týden** = 7 dní před koncem **nejnovější konverzace v datech** (ne před dneškem —
+deterministické a funguje i se starší kopií logů). Z něj: `pomocnici.posledni` (kdy · typ · popis)
+a kandidáti `poslední týden` (pro téma 17).
+
+**Popisy úkolů pomocníků:** jediný text, který vzor bere ze vstupu nástroje — pole `description`
+volání `Agent`/`Task` (3–5 slov), max 80 znaků, absolutní cesty nahrazené `…`. Zadání (`prompt`)
+nikdy.
+
+**Projekty:** složka pod `projects/` = projekt (název složky je zakódovaná cesta, např.
+`-Users-jan-kampane` — na slide nikdy, jen zobecněný název). Vzor dává konverzací, zpráv
+člověka a datum poslední konverzace; „o čem“ doplň ze shrnutí po compact a prvních zpráv.
+
+**Kód ve skillech** (`cc-nastaveni.mjs`): soubory podle přípony ve složce skillu (bez `*.md`,
+`node_modules`, `.git`, `.venv`). Skill s kódem „dělá práci“ (skripty), bez kódu je jen návod.
+Složka, která není skill (třeba synchronizovaná kopie bez `SKILL.md`), na slide nepatří.
 
 **Křížová kontrola (vždy):**
 `find <profil>/projects -name '*.jsonl' -not -path '*/subagents/*' -mtime -30 | wc -l`

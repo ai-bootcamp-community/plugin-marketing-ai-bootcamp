@@ -20,11 +20,16 @@ test("hooky jako událost a počet, bez příkazů", () => {
   assert.deepEqual(n.hooky, [{ udalost: "SessionStart", pocet: 2 }, { udalost: "PreToolUse", pocet: 1 }]);
   assert.doesNotMatch(json, /tajna\/cesta/);
 });
-test("permissions jako počty", () => assert.deepEqual(n.permissions, { allow: 1, deny: 3, ask: 0, defaultMode: "auto" }));
+test("permissions: počty a ukázky pravidel se zamaskovanými cestami", () => assert.deepEqual(n.permissions, {
+  allow: 1, deny: 4, ask: 0, defaultMode: "auto",
+  ukazky: { allow: ["Bash(ls:*)"], deny: ["Read(.env)", "Bash(rm -rf:*)", "Bash(sops -d:*)", "Read(…)"], ask: [] },
+}));
 test("zapnuté pluginy", () => assert.deepEqual(n.pluginy, ["superpowers@krakatice"]));
-test("skilly s popisem z hlavičky", () =>
-  assert.deepEqual(n.skilly, [{ nazev: "muj-skill", popis: "Napíše brief pro agenturu z poznámek ze schůzky.", vlastni: true }]));
+test("skilly s popisem a kódem (v2)", () => assert.deepEqual(n.skilly, [
+  { nazev: "jen-navod", popis: "Jen instrukce.", vlastni: true, kod: { py: 0, js: 0, sh: 0, jine: 0, radku: 0 } },
+  { nazev: "muj-skill", popis: "Napíše brief pro agenturu z poznámek ze schůzky.", vlastni: true, kod: { py: 1, js: 1, sh: 0, jine: 0, radku: 5 } },
+]));
 test("agenti s popisem", () => assert.deepEqual(n.agenti, [{ nazev: "x", popis: "Rešeršér pro konkurenci." }]));
 test("CLAUDE.md jen počet řádků", () => assert.deepEqual(n.claude_md, [{ soubor_id: "CLAUDE.md", radku: 4 }]));
-test("memory jen počty souborů", () => assert.deepEqual(n.memory, [{ projekt_id: "-proj-a", souboru: 1 }]));
+test("memory: počty a jména souborů (v2)", () => assert.deepEqual(n.memory, [{ projekt_id: "-proj-a", souboru: 1, soubory: ["MEMORY.md"] }]));
 test("nic z obsahu souborů", () => assert.doesNotMatch(json, /TAJNY_TEXT/));
