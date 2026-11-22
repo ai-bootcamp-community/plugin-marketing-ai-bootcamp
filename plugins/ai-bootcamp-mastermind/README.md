@@ -16,10 +16,10 @@ Vlož do svého agenta (Claude Code, Codex, Hermes, Cursor…):
 ```text
 Nainstaluj mi skill ai-bootcamp-mastermind z repa
 https://github.com/ai-bootcamp-community/plugin-playground.
-Postupuj podle plugins/ai-bootcamp-mastermind/INSTALL.md v tom repu.
+Postupuj podle plugins/ai-bootcamp-mastermind/install-mastermind.md v tom repu.
 ```
 
-Agent si návod ([`INSTALL.md`](INSTALL.md)) stáhne, vybere složku skillů svého nástroje, ukáže,
+Agent si návod ([`install-mastermind.md`](install-mastermind.md)) stáhne, vybere složku skillů svého nástroje, ukáže,
 co kam kopíruje, a řekne ti, co skill dělá.
 
 **Bez agenta, jedním příkazem** (Claude Code všech profilů, Codex, Hermes a `~/.agents/skills`):

@@ -58,7 +58,7 @@ podle kterého si agent zpracování připraví sám — ukázka, kam se vydat, 
 ```
 plugins/ai-bootcamp-mastermind/
   README.md                 # pro člověka: k čemu, instalační prompt, co čte, kam ukládá
-  INSTALL.md                # pro agenta: stejný vzor jako u ai-bootcamp-prezentace
+  install-mastermind.md     # pro agenta: stejný vzor jako u ai-bootcamp-prezentace
   skills/ai-bootcamp-mastermind/
     SKILL.md                # postup (níže)
     reference/temata.md     # 19 témat: co hledat, odkud, jak ukázat
