@@ -1,0 +1,2 @@
+{"type":"user","isSidechain":true,"message":{"role":"user","content":"TAJNY_TEXT úkol pro pomocníka"},"timestamp":"2026-11-10T08:16:01.000Z","uuid":"x1"}
+{"type":"assistant","isSidechain":true,"message":{"id":"msg_s1","role":"assistant","model":"claude-haiku-5-5","content":[{"type":"text","text":"TAJNY_TEXT"}],"usage":{"input_tokens":1000,"output_tokens":1000}},"timestamp":"2026-11-10T08:16:05.000Z","uuid":"x2"}

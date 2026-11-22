@@ -1,0 +1,2 @@
+{"type":"user","message":{"role":"user","content":"TAJNY_TEXT automat"},"timestamp":"2026-11-11T06:00:00.000Z","entrypoint":"sdk-cli","uuid":"v1"}
+{"type":"assistant","message":{"id":"msg_9","role":"assistant","model":"claude-sonnet-5-5","content":[{"type":"text","text":"TAJNY_TEXT"}],"usage":{"input_tokens":7,"output_tokens":3}},"timestamp":"2026-11-11T06:00:05.000Z","uuid":"v2"}

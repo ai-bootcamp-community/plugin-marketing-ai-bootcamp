@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI deep dive</title>
+<!--
+  Šablona prezentace ai-bootcamp-mastermind. Funguje sama: otevři v prohlížeči, listuj šipkami.
+  Agent mění JEN obsah datového bloku (script s id "data", formát: reference/temata.md).
+  Vkládej skriptem scripts/vloz.mjs (escapuje znak menší-než, ať text v datech neukončí blok).
+  Žádné externí zdroje; všechen text se vkládá přes textContent.
+-->
+<style>
+:root {
+  --bg: #12131a; --panel: #1b1d27; --line: #2c2f3d; --text: #ecedf3; --muted: #9a9db0;
+  --accent: #e8875b; --accent-soft: color-mix(in srgb, var(--accent) 18%, transparent);
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+:root[data-theme="svetla"] {
+  --bg: #f6f5f1; --panel: #ffffff; --line: #e2e0d8; --text: #1d1e24; --muted: #6a6c78;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); }
+body { overflow: hidden; }
+.slide {
+  position: absolute; inset: 0; display: none; flex-direction: column;
+  padding: clamp(20px, 5vh, 56px) clamp(16px, 6vw, 88px) 72px; overflow-y: auto;
+}
+.slide.aktivni { display: flex; }
+.kicker { color: var(--accent); font-size: 14px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; }
+h1 { font-size: clamp(36px, 6vw, 72px); line-height: 1.05; margin: 12px 0 8px; }
+h2 { font-size: clamp(26px, 3.6vw, 44px); line-height: 1.1; margin: 8px 0 12px; }
+.role { color: var(--muted); font-size: clamp(16px, 2vw, 22px); }
+.lead {
+  font-size: clamp(17px, 2vw, 23px); line-height: 1.4; margin: 0 0 24px; max-width: 60ch;
+  border-left: 4px solid var(--accent); padding-left: 14px;
+}
+.titul { justify-content: center; }
+.titul .veta { font-size: clamp(20px, 2.6vw, 30px); max-width: 30ch; margin-top: 28px; line-height: 1.3; }
+.bloky { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); align-items: start; }
+.blok { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; min-width: 0; }
+.blok p { margin: 0; line-height: 1.5; font-size: 17px; }
+.blok ul { margin: 0; padding-left: 20px; line-height: 1.6; font-size: 17px; }
+.cipy { display: flex; flex-wrap: wrap; gap: 8px; }
+.cip { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 999px; padding: 5px 12px; font-size: 15px; }
+.stat .hodnota { font-size: clamp(40px, 6vw, 68px); font-weight: 700; color: var(--accent); line-height: 1; }
+.stat .popis { color: var(--muted); margin-top: 8px; font-size: 16px; }
+.bar { display: grid; grid-template-columns: minmax(80px, 34%) 1fr auto; gap: 10px; align-items: center; margin: 7px 0; font-size: 15px; }
+.bar .stopa { background: var(--line); border-radius: 6px; height: 12px; overflow: hidden; }
+.bar .vypln { background: var(--accent); height: 100%; border-radius: 6px; }
+.bar .cislo { color: var(--muted); font-variant-numeric: tabular-nums; }
+.heat { display: grid; grid-template-columns: 26px repeat(24, 1fr); gap: 3px; font-size: 11px; color: var(--muted); }
+.heat .bunka { aspect-ratio: 1; border-radius: 3px; background: var(--accent); }
+.heat .nula { background: var(--line); }
+.tok { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tok .krok { background: var(--accent-soft); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 15px; }
+.tok .sipka { color: var(--accent); font-size: 20px; }
+.chat { display: flex; flex-direction: column; gap: 10px; }
+.bublina { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 15px; line-height: 1.45; white-space: pre-wrap; }
+.bublina.ja { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.bublina.ai { align-self: flex-start; background: var(--line); border-bottom-left-radius: 4px; }
+.bublina .kdo { display: block; font-size: 11px; opacity: .75; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .06em; }
+.kod .stitek { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.kod pre { margin: 0; font-family: var(--mono); font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.osa { list-style: none; margin: 0; padding: 0; border-left: 2px solid var(--line); }
+.osa li { position: relative; padding: 0 0 12px 16px; font-size: 15px; line-height: 1.45; }
+.osa li::before { content: ""; position: absolute; left: -6px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.osa .kdy { color: var(--muted); font-size: 13px; display: block; }
+.blok-nadpis { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+.blok.velky { grid-column: 1 / -1; }
+.graf svg { width: 100%; height: auto; max-height: 40vh; display: block; margin: 0 auto; }
+.graf .uzel rect, .graf .uzel polygon { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+.graf .uzel text { fill: var(--text); font-size: 14px; font-family: var(--font); }
+.graf .hrana { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+.graf .hrana.carkovana { stroke-dasharray: 5 4; }
+.graf .popisek { fill: var(--muted); font-size: 12px; font-family: var(--font); }
+.graf .sipka-hrot { fill: var(--muted); }
+.tabulka { width: 100%; border-collapse: collapse; font-size: 15px; }
+.tabulka th { text-align: left; color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--line); padding: 6px 10px 8px 0; }
+.tabulka td { border-bottom: 1px solid var(--line); padding: 8px 10px 8px 0; vertical-align: top; line-height: 1.4; }
+.tabulka tr:last-child td { border-bottom: 0; }
+.tabulka td:first-child { font-weight: 600; }
+.strom, .strom ul { list-style: none; margin: 0; padding: 0; }
+.strom ul { margin-left: 10px; padding-left: 16px; border-left: 1px dashed var(--line); }
+.strom li { padding: 4px 0; font-size: 15px; line-height: 1.35; }
+.strom .jmeno { font-weight: 600; }
+.strom .jmeno::before { content: "▸ "; color: var(--accent); }
+.strom .pozn { color: var(--muted); font-size: 13px; margin-left: 8px; }
+.zaver .bloky h3 { margin: 0 0 10px; font-size: 18px; color: var(--accent); }
+.lista { position: fixed; left: 0; right: 0; bottom: 0; height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 20px; color: var(--muted); font-size: 13px; }
+.lista button { background: none; border: 1px solid var(--line); color: var(--text); border-radius: 8px; width: 36px; height: 30px; cursor: pointer; font-size: 16px; }
+.lista .postup { flex: 1; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
+.lista .postup span { display: block; height: 100%; background: var(--accent); }
+@media (max-width: 640px) { .bar { grid-template-columns: 1fr auto; } .bar .stopa { grid-column: 1 / -1; grid-row: 2; } }
+@media print {
+  body { overflow: visible; } .lista { display: none; }
+  .slide { position: relative; display: flex !important; min-height: 100vh; page-break-after: always; overflow: visible; }
+}
+</style>
+</head>
+<body>
+<main id="slidy"></main>
+<nav class="lista" aria-label="Ovládání">
+  <button id="zpet" aria-label="Předchozí">‹</button>
+  <span id="pocitadlo"></span>
+  <div class="postup"><span id="postup"></span></div>
+  <button id="dal" aria-label="Další">›</button>
+</nav>
+
+<script type="application/json" id="data">
+{
+ "version": 1,
+ "meta": {
+  "name": "Jana Kovářová",
+  "role": "Vedoucí marketingu · outdoorový e-shop",
+  "tools": [
+   "Claude Code",
+   "ChatGPT",
+   "Claude app"
+  ],
+  "sentence": "Jak mi tři AI pomocníci připraví kampaň za dopoledne a co si přitom pamatují.",
+  "accent": "#e8875b",
+  "theme": "tmava"
+ },
+ "sections": [
+  {
+   "id": "mapa",
+   "title": "Mapa setupu",
+   "lead": "Všechno se točí kolem jedné složky poznámek, do které AI čte i zapisuje.",
+   "blocks": [
+    {
+     "type": "mermaid",
+     "text": "flowchart LR\n  J(Já) -->|zadání| CC[Claude Code]\n  CC --> SK[Skilly]\n  CC -->|souběžně| P{Pomocníci}\n  CC --> N[Napojení: Gmail, Drive]\n  CC -.-> B[Druhý mozek]\n  A[Ranní automatika] -.-> CC"
+    },
+    {
+     "type": "chips",
+     "items": [
+      "2 profily: práce a osobní",
+      "11 vlastních skillů",
+      "4 napojení",
+      "1 druhý mozek"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "skilly",
+   "title": "Skilly do detailu",
+   "lead": "Skill je návod, který AI dostane pokaždé stejně. Díky tomu nemusím vysvětlovat znovu.",
+   "blocks": [
+    {
+     "type": "stat",
+     "value": "11 / 4",
+     "label": "vlastních skillů / z toho se skripty"
+    },
+    {
+     "type": "table",
+     "title": "Skilly, které dělají práci (mají kód)",
+     "columns": [
+      "Skill",
+      "Kód",
+      "Použití",
+      "Co dělá"
+     ],
+     "rows": [
+      [
+       "tydenni-report",
+       "3× Python, 420 ř.",
+       "31×",
+       "stáhne čísla z analytiky, spočítá týden, udělá tabulku"
+      ],
+      [
+       "rešerše-konkurence",
+       "1× Node, 150 ř.",
+       "18×",
+       "projde weby konkurence, porovná ceny"
+      ],
+      [
+       "export-briefu",
+       "1× Python, 90 ř.",
+       "12×",
+       "převede brief do PDF pro agenturu"
+      ],
+      [
+       "třídění-pošty",
+       "2× shell, 40 ř.",
+       "9×",
+       "roztřídí ranní poštu podle štítků"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "label": "Zevnitř: tydenni-report (nejvíc kódu i použití)",
+     "text": "stahni_data.py  → čísla z analytiky za 7 dní (jen čtení)\nspocitej.py     → týden vs. minulý týden, odchylky nad 10 %\ntabulka.py      → tabulka do reportu + 3 věty komentáře od AI"
+    }
+   ]
+  },
+  {
+   "id": "orchestrace",
+   "title": "Orchestrace",
+   "lead": "Velký úkol rozdělím mezi pomocníky; já řídím, oni dělají rešerši souběžně.",
+   "blocks": [
+    {
+     "type": "mermaid",
+     "text": "flowchart TD\n  J(Já) --> H[Hlavní agent]\n  H -->|rešerše| R1[Pomocník 1]\n  H -->|rešerše| R2[Pomocník 2]\n  H -->|kontrola| K[Kontrolor]\n  R1 --> H\n  R2 --> H"
+    },
+    {
+     "type": "table",
+     "title": "Co pomocníci řešili poslední týden",
+     "columns": [
+      "Kdy",
+      "Typ",
+      "Úkol"
+     ],
+     "rows": [
+      [
+       "pá",
+       "rešerše",
+       "Ceny konkurence na stany"
+      ],
+      [
+       "čt",
+       "kontrola",
+       "Kontrola textů newsletteru"
+      ],
+      [
+       "čt",
+       "rešerše",
+       "Trendy outdoor 2027"
+      ],
+      [
+       "st",
+       "obecný",
+       "Sloučit poznámky ze tří schůzek"
+      ]
+     ]
+    },
+    {
+     "type": "stat",
+     "value": "až 4",
+     "label": "pomocníci souběžně"
+    }
+   ]
+  },
+  {
+   "id": "konverzace",
+   "title": "Jak spolu mluvíme",
+   "lead": "Krátké zadání, AI se doptá, pak jede sama.",
+   "blocks": [
+    {
+     "type": "conversation",
+     "title": "Plánování",
+     "messages": [
+      {
+       "who": "ja",
+       "text": "Udělej brief na podzimní kampaň, poznámky jsou v dnešní schůzce."
+      },
+      {
+       "who": "ai",
+       "text": "Chybí rozpočet a termín: doplníš, nebo nechám jako otázku pro agenturu?"
+      },
+      {
+       "who": "ja",
+       "text": "Nech jako otázku."
+      }
+     ]
+    },
+    {
+     "type": "conversation",
+     "title": "Oprava",
+     "messages": [
+      {
+       "who": "ja",
+       "text": "V reportu jsou loňská čísla."
+      },
+      {
+       "who": "ai",
+       "text": "Máš pravdu, vzala jsem starý export. Přepočítám z aktuálního."
+      }
+     ]
+    },
+    {
+     "type": "conversation",
+     "title": "Rychlý dotaz",
+     "messages": [
+      {
+       "who": "ja",
+       "text": "Kolik lidí otevřelo včerejší newsletter?"
+      },
+      {
+       "who": "ai",
+       "text": "31 % otevření, o 4 body víc než průměr."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mcp",
+   "title": "Napojení",
+   "lead": "AI vidí do pošty, dokumentů a kalendáře, takže nekopíruju.",
+   "blocks": [
+    {
+     "type": "bars",
+     "items": [
+      [
+       "Gmail",
+       64
+      ],
+      [
+       "Google Drive",
+       51
+      ],
+      [
+       "Kalendář",
+       23
+      ],
+      [
+       "Analytika (interní)",
+       9
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "projekty",
+   "title": "Na čem to jede",
+   "lead": "Většina konverzací jsou kampaně, pak reporty a rešerše.",
+   "blocks": [
+    {
+     "type": "table",
+     "columns": [
+      "Projekt",
+      "Konverzací",
+      "Naposledy",
+      "O čem"
+     ],
+     "rows": [
+      [
+       "Podzimní kampaň",
+       "38",
+       "pá",
+       "briefy, texty, kontrola agentury"
+      ],
+      [
+       "Týdenní reporty",
+       "24",
+       "po",
+       "čísla z analytiky, komentář"
+      ],
+      [
+       "Rešerše trhu",
+       "17",
+       "čt",
+       "konkurence, ceny, trendy"
+      ],
+      [
+       "Web",
+       "12",
+       "st",
+       "texty produktových stránek"
+      ],
+      [
+       "Osobní",
+       "9",
+       "ne",
+       "plánování dovolené"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "brain",
+   "title": "Druhý mozek",
+   "lead": "Složka poznámek, kterou AI čte před každou prací a doplňuje po ní.",
+   "blocks": [
+    {
+     "type": "tree",
+     "items": [
+      {
+       "name": "brain/",
+       "note": "~600 poznámek",
+       "children": [
+        {
+         "name": "schůzky/",
+         "note": "zápisy, AI je stahuje sama",
+         "children": [
+          {
+           "name": "2026-11/",
+           "note": "42 zápisů"
+          }
+         ]
+        },
+        {
+         "name": "kampaně/",
+         "note": "jedna složka na kampaň",
+         "children": [
+          {
+           "name": "podzim-2026/",
+           "note": "brief, texty, výsledky"
+          }
+         ]
+        },
+        {
+         "name": "rozhodnutí/",
+         "note": "co platí a proč"
+        },
+        {
+         "name": "lidé/",
+         "note": "kdo je kdo, bez kontaktů"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "list",
+     "title": "Jak ho AI používá",
+     "items": [
+      "Před prací čte rozhodnutí a minulé kampaně",
+      "Po schůzce zapíše zápis a úkoly",
+      "Na konci týdne shrne, co se změnilo"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "claude-md",
+   "title": "Moje pravidla pro AI",
+   "lead": "Pár vět, které AI dostane do každé konverzace.",
+   "blocks": [
+    {
+     "type": "table",
+     "columns": [
+      "Část instrukcí",
+      "Co říká"
+     ],
+     "rows": [
+      [
+       "Styl",
+       "česky, krátce, bez marketingových frází"
+      ],
+      [
+       "Bezpečnost",
+       "nic neposílat ven bez ukázky"
+      ],
+      [
+       "Data",
+       "čísla jen ze zdroje, nikdy odhadem"
+      ],
+      [
+       "Paměť",
+       "poznatky zapisovat do druhého mozku"
+      ]
+     ]
+    },
+    {
+     "type": "code",
+     "label": "Citace",
+     "text": "Když si nejsi jistá, zeptej se. Raději jedna otázka než špatný brief."
+    }
+   ]
+  },
+  {
+   "id": "memories",
+   "title": "Co si o mně pamatuje",
+   "lead": "AI si pamatuje moje preference, ne obsah práce.",
+   "blocks": [
+    {
+     "type": "list",
+     "title": "Ukázky toho, co si pamatuje",
+     "items": [
+      "Reporty chci v tabulce, ne v odstavcích",
+      "Pondělí ráno = týdenní plán",
+      "Agentura dostává briefy v PDF",
+      "Na newslettery používám neformální tón"
+     ]
+    },
+    {
+     "type": "table",
+     "title": "Kde si AI co pamatuje",
+     "columns": [
+      "Místo",
+      "Co tam je",
+      "Kolik"
+     ],
+     "rows": [
+      [
+       "Paměť Claude Code",
+       "preference a zvyky",
+       "14 záznamů"
+      ],
+      [
+       "Druhý mozek",
+       "práce: schůzky, kampaně, rozhodnutí",
+       "~600 poznámek"
+      ],
+      [
+       "Instrukce",
+       "pravidla",
+       "4 části"
+      ],
+      [
+       "ChatGPT paměť",
+       "osobní věci",
+       "nepoužívám pro práci"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ai-vs-prace",
+   "title": "Co řeším s AI a co v práci",
+   "lead": "S AI dělám hlavně přípravu; rozhodování a lidi zůstávají u mě.",
+   "blocks": [
+    {
+     "type": "bars",
+     "items": [
+      [
+       "Příprava podkladů",
+       55
+      ],
+      [
+       "Psaní",
+       25
+      ],
+      [
+       "Učení se novým věcem",
+       12
+      ],
+      [
+       "Osobní",
+       8
+      ]
+     ]
+    },
+    {
+     "type": "text",
+     "text": "V práci trávím nejvíc času schůzkami. Ty AI nenahradí, ale připraví mi na ně podklady."
+    }
+   ]
+  },
+  {
+   "id": "vyvoj",
+   "title": "Jak se to vyvíjelo",
+   "lead": "Od chatu v prohlížeči k pomocníkům, kteří pracují za mě ráno.",
+   "blocks": [
+    {
+     "type": "timeline",
+     "items": [
+      {
+       "when": "jaro",
+       "what": "ChatGPT na texty"
+      },
+      {
+       "when": "léto",
+       "what": "Claude Code a první skill na briefy"
+      },
+      {
+       "when": "září",
+       "what": "Napojení na Gmail a Drive"
+      },
+      {
+       "when": "říjen",
+       "what": "Druhý mozek a ranní automatika"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "den",
+   "title": "Den s AI",
+   "lead": "Ráno plánuju, odpoledne nechávám pomocníky pracovat.",
+   "blocks": [
+    {
+     "type": "heatmap",
+     "title": "Já",
+     "data": [
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       2,
+       6,
+       8,
+       5,
+       3,
+       1,
+       2,
+       4,
+       5,
+       3,
+       1,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       5,
+       7,
+       6,
+       2,
+       1,
+       3,
+       4,
+       4,
+       2,
+       1,
+       0,
+       0,
+       1,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       2,
+       6,
+       6,
+       4,
+       3,
+       1,
+       2,
+       3,
+       4,
+       3,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       4,
+       7,
+       5,
+       2,
+       2,
+       2,
+       5,
+       3,
+       2,
+       1,
+       0,
+       1,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       5,
+       6,
+       3,
+       2,
+       1,
+       1,
+       2,
+       2,
+       1,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       2,
+       1,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       1,
+       2,
+       1,
+       0,
+       0,
+       0
+      ]
+     ]
+    },
+    {
+     "type": "heatmap",
+     "title": "Automatika",
+     "data": [
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       3,
+       3,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       3,
+       3,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       3,
+       3,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       3,
+       3,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       3,
+       3,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0,
+       0
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sama-vs-ja",
+   "title": "AI sama vs. se mnou",
+   "lead": "Čtvrtinu práce udělá AI, aniž bych u toho seděla.",
+   "blocks": [
+    {
+     "type": "stat",
+     "value": "26 %",
+     "label": "konverzací spustila automatika"
+    },
+    {
+     "type": "flow",
+     "title": "Každé ráno bez ní",
+     "steps": [
+      "6:00 automatika",
+      "souhrn pošty a kalendáře",
+      "zápis do druhého mozku",
+      "v 8:00 hotový plán dne"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "mantinely",
+   "title": "Mantinely",
+   "lead": "Co AI nesmí, je napsané, ne jen myšlené.",
+   "blocks": [
+    {
+     "type": "list",
+     "title": "Povoleno bez ptaní",
+     "items": [
+      "Číst a zapisovat v druhém mozku",
+      "Číst poštu a kalendář",
+      "Spouštět vlastní skripty reportů"
+     ]
+    },
+    {
+     "type": "list",
+     "title": "Zakázáno",
+     "items": [
+      "Posílat e-maily bez potvrzení",
+      "Číst složku s financemi",
+      "Mazat soubory (jen archiv)"
+     ]
+    },
+    {
+     "type": "code",
+     "label": "Jak to vypadá v nastavení",
+     "text": "zakázáno:  Read(finance/**)   Bash(rm:*)\npovoleno:  Read(brain/**)     Bash(python3 skripty/*)"
+    }
+   ]
+  },
+  {
+   "id": "modely",
+   "title": "Modely na co",
+   "lead": "Silný model na myšlení, rychlý na rutinu.",
+   "blocks": [
+    {
+     "type": "bars",
+     "items": [
+      [
+       "Opus — plánování, briefy",
+       61
+      ],
+      [
+       "Sonnet — texty, reporty",
+       34
+      ],
+      [
+       "Haiku — třídění pošty",
+       5
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "kontext",
+   "title": "Dlouhé konverzace",
+   "lead": "Když konverzace přeteče, AI si ji shrne a jede dál.",
+   "blocks": [
+    {
+     "type": "stat",
+     "value": "14",
+     "label": "konverzací přeteklo za měsíc"
+    },
+    {
+     "type": "text",
+     "text": "Většinou to zmáčknu sama, když měním téma; automaticky to proběhne jen u dlouhých rešerší."
+    }
+   ]
+  },
+  {
+   "id": "momenty",
+   "title": "Nejlepší a nejhorší moment",
+   "lead": "Jednou to ušetřilo den, jednou to vymyslelo čísla.",
+   "blocks": [
+    {
+     "type": "text",
+     "title": "Nejlepší",
+     "text": "Rešerše pěti konkurentů souběžně, hotová před obědem."
+    },
+    {
+     "type": "text",
+     "title": "Nejhorší",
+     "text": "Report s čísly z minulého roku. Od té doby pravidlo „čísla jen ze zdroje“."
+    },
+    {
+     "type": "table",
+     "title": "Posledních 7 dní",
+     "columns": [
+      "Kdy",
+      "Co"
+     ],
+     "rows": [
+      [
+       "po",
+       "Týdenní report za 10 minut"
+      ],
+      [
+       "út",
+       "Texty pro 12 produktů najednou"
+      ],
+      [
+       "st",
+       "Brief, na který se agentura nedoptávala"
+      ],
+      [
+       "čt",
+       "Rešerše trendů s pomocníky"
+      ],
+      [
+       "pá",
+       "Úklid druhého mozku po kampani"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sdileni",
+   "title": "Co sdílím s ostatními",
+   "lead": "Skill na briefy teď používá celý tým.",
+   "blocks": [
+    {
+     "type": "chips",
+     "items": [
+      "brief-pro-agenturu",
+      "tydenni-report",
+      "šablona pravidel pro nováčky"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "plany",
+   "title": "Co chci postavit dál",
+   "lead": "Tady potřebuju vaši radu.",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "Napojit AI na CRM, ale jen ke čtení",
+      "Pomocník, který hlídá rozpočty kampaní",
+      "Sdílený druhý mozek pro celý tým"
+     ]
+    }
+   ]
+  }
+ ],
+ "closing": {
+  "ask": [
+   "Jak bezpečně napojit AI na CRM?",
+   "Sdílíte druhý mozek v týmu? Jak?"
+  ],
+  "takeaways": [
+   "Začni jedním skillem na věc, kterou děláš každý týden",
+   "Napiš AI pravidla, ne jen úkoly"
+  ]
+ }
+}
+</script>
+
+<script id="rozdeleni">
+// Čistá funkce bez DOM: z dat udělá seznam slidů. Testuje se v tests/sablona.test.mjs.
+function rozdelNaSlidy(data) {
+  var MAX_BLOKU = 3;
+  var neprazdne = function (x) { return Array.isArray(x) && x.length > 0; };
+  var VELKE = { mermaid: true, table: true, tree: true }; // zaberou půl slidu: max 1 velký + 1 malý
+  var maObsah = function (b) {
+    if (!b || typeof b !== "object") return false;
+    switch (b.type) {
+      case "text": case "code": case "mermaid": return typeof b.text === "string" && b.text.trim() !== "";
+      case "table": return neprazdne(b.rows);
+      case "list": case "chips": case "bars": case "timeline": case "tree": return neprazdne(b.items);
+      case "flow": return neprazdne(b.steps);
+      case "conversation": return neprazdne(b.messages);
+      case "stat": return b.value !== undefined && b.value !== null && String(b.value) !== "";
+      case "heatmap": return neprazdne(b.data) && b.data.some(function (r) { return neprazdne(r) && r.some(function (v) { return v > 0; }); });
+      default: return false;
+    }
+  };
+  var slidy = [{ typ: "titul" }];
+  (data.sections || []).forEach(function (s) {
+    // Váha: malý blok 1, velký 2; slide unese 3 a nejvýš jeden velký blok.
+    var aktualni = [], vaha = 0, maVelky = false;
+    (s.blocks || []).filter(maObsah).forEach(function (b) {
+      var velky = !!VELKE[b.type], w = velky ? 2 : 1;
+      if (aktualni.length && (vaha + w > MAX_BLOKU || (velky && maVelky))) {
+        slidy.push({ typ: "sekce", sekce: s, bloky: aktualni });
+        aktualni = []; vaha = 0; maVelky = false;
+      }
+      aktualni.push(b); vaha += w; maVelky = maVelky || velky;
+    });
+    if (aktualni.length) slidy.push({ typ: "sekce", sekce: s, bloky: aktualni });
+  });
+  var z = data.closing || {};
+  if (neprazdne(z.ask) || neprazdne(z.takeaways)) slidy.push({ typ: "zaver" });
+  return slidy;
+}
+</script>
+
+<script id="mermaid">
+// Podmnožina mermaid (flowchart/graph): uzly A[..] A(..) A{..}, šipky --> -.-> ==> --- s popiskem |..|.
+// Čistá funkce bez DOM; vrací null, když syntaxi nezná (blok se pak ukáže jako kód).
+function parseMermaid(text) {
+  if (typeof text !== "string") return null;
+  var radky = text.split(/\n|;/).map(function (r) { return r.trim(); }).filter(function (r) { return r && r.indexOf("%%") !== 0; });
+  if (!radky.length) return null;
+  var hlavicka = /^(flowchart|graph)(?:\s+(LR|RL|TD|TB|BT))?\s*$/i.exec(radky[0]);
+  if (!hlavicka) return null;
+  var smer = /^(LR|RL)$/i.test(hlavicka[2] || "") ? "LR" : "TD";
+  var UZEL = /^([\wÀ-ſ]+)\s*(?:\[([^\]]*)\]|\(([^)]*)\)|\{([^}]*)\})?/;
+  var SIPKA = /^\s*(-\.->|-->|==>|---|-\.-)\s*(?:\|([^|]*)\|)?\s*/;
+  var uzly = [], podleId = {}, hrany = [];
+  var bezUvozovek = function (t) { t = t.trim(); return /^".*"$/.test(t) ? t.slice(1, -1) : t; };
+  function uzel(m) {
+    var id = m[1], label = null, tvar = "obdelnik";
+    if (m[2] !== undefined) label = m[2];
+    else if (m[3] !== undefined) { label = m[3]; tvar = "kulaty"; }
+    else if (m[4] !== undefined) { label = m[4]; tvar = "kosoctverec"; }
+    if (!podleId[id]) { podleId[id] = { id: id, label: id, tvar: "obdelnik" }; uzly.push(podleId[id]); }
+    if (label !== null) { podleId[id].label = bezUvozovek(label); podleId[id].tvar = tvar; }
+    return id;
+  }
+  for (var i = 1; i < radky.length; i++) {
+    var r = radky[i];
+    if (/^(style|classDef|class|linkStyle|click|subgraph|end|direction)\b/.test(r)) continue;
+    var m = UZEL.exec(r);
+    if (!m) return null;
+    var pred = uzel(m), zbytek = r.slice(m[0].length);
+    while (zbytek.trim()) {
+      var s = SIPKA.exec(zbytek);
+      if (!s) return null;
+      zbytek = zbytek.slice(s[0].length);
+      m = UZEL.exec(zbytek);
+      if (!m) return null;
+      var dalsi = uzel(m);
+      hrany.push({ z: pred, do: dalsi, label: (s[2] || "").trim(), carkovana: s[1].indexOf(".") >= 0 });
+      pred = dalsi; zbytek = zbytek.slice(m[0].length);
+    }
+  }
+  return uzly.length ? { smer: smer, uzly: uzly, hrany: hrany } : null;
+}
+</script>
+
+<script>
+(function () {
+  var data = JSON.parse(document.getElementById("data").textContent);
+  var meta = data.meta || {};
+  var koren = document.documentElement;
+  if (meta.theme === "svetla") koren.setAttribute("data-theme", "svetla");
+  if (/^#[0-9a-fA-F]{6}$/.test(meta.accent || "")) koren.style.setProperty("--accent", meta.accent);
+  if (meta.name) document.title = meta.name + " · AI deep dive";
+
+  function el(tag, trida, text) {
+    var e = document.createElement(tag);
+    if (trida) e.className = trida;
+    if (text !== undefined && text !== null) e.textContent = String(text);
+    return e;
+  }
+
+  var DNY = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+  var BLOKY = {
+    text: function (b, box) { box.appendChild(el("p", null, b.text)); },
+    list: function (b, box) { var ul = el("ul"); b.items.forEach(function (x) { ul.appendChild(el("li", null, x)); }); box.appendChild(ul); },
+    chips: function (b, box) { var w = el("div", "cipy"); b.items.forEach(function (x) { w.appendChild(el("span", "cip", x)); }); box.appendChild(w); },
+    stat: function (b, box) { box.classList.add("stat"); box.appendChild(el("div", "hodnota", b.value)); if (b.label) box.appendChild(el("div", "popis", b.label)); },
+    bars: function (b, box) {
+      var max = Math.max.apply(null, b.items.map(function (x) { return Number(x[1]) || 0; })) || 1;
+      b.items.forEach(function (x) {
+        var r = el("div", "bar"); r.appendChild(el("span", null, x[0]));
+        var st = el("div", "stopa"), v = el("div", "vypln"); v.style.width = Math.round((Number(x[1]) || 0) * 100 / max) + "%";
+        st.appendChild(v); r.appendChild(st); r.appendChild(el("span", "cislo", x[1])); box.appendChild(r);
+      });
+    },
+    heatmap: function (b, box) {
+      var max = 0; b.data.forEach(function (r) { r.forEach(function (v) { if (v > max) max = v; }); });
+      var g = el("div", "heat"); g.setAttribute("role", "img"); g.setAttribute("aria-label", "Aktivita podle dne a hodiny");
+      g.appendChild(el("span"));
+      for (var h = 0; h < 24; h++) g.appendChild(el("span", null, h % 6 === 0 ? h : ""));
+      b.data.forEach(function (r, d) {
+        g.appendChild(el("span", null, DNY[d] || ""));
+        for (var h = 0; h < 24; h++) {
+          var v = Number(r[h]) || 0, c = el("span", v ? "bunka" : "bunka nula");
+          if (v) c.style.opacity = (0.25 + 0.75 * v / max).toFixed(2);
+          c.title = (DNY[d] || "") + " " + h + ":00 · " + v; g.appendChild(c);
+        }
+      });
+      box.appendChild(g);
+    },
+    flow: function (b, box) {
+      var w = el("div", "tok");
+      b.steps.forEach(function (x, i) { if (i) w.appendChild(el("span", "sipka", "→")); w.appendChild(el("span", "krok", x)); });
+      box.appendChild(w);
+    },
+    conversation: function (b, box) {
+      var w = el("div", "chat");
+      b.messages.forEach(function (m) {
+        var ja = m.who === "ja", bub = el("div", "bublina " + (ja ? "ja" : "ai"));
+        bub.appendChild(el("span", "kdo", ja ? "já" : "AI")); bub.appendChild(document.createTextNode(m.text || "")); w.appendChild(bub);
+      });
+      box.appendChild(w);
+    },
+    code: function (b, box) { box.classList.add("kod"); if (b.label) box.appendChild(el("div", "stitek", b.label)); box.appendChild(el("pre", null, b.text)); },
+    timeline: function (b, box) {
+      var ul = el("ul", "osa");
+      b.items.forEach(function (x) { var li = el("li"); li.appendChild(el("span", "kdy", x.when)); li.appendChild(document.createTextNode(x.what || "")); ul.appendChild(li); });
+      box.appendChild(ul);
+    },
+    table: function (b, box) {
+      var t = el("table", "tabulka");
+      if (b.columns && b.columns.length) {
+        var tr = el("tr"); b.columns.forEach(function (c) { tr.appendChild(el("th", null, c)); });
+        var th = el("thead"); th.appendChild(tr); t.appendChild(th);
+      }
+      var tb = el("tbody");
+      b.rows.forEach(function (r) { var tr = el("tr"); (r || []).forEach(function (c) { tr.appendChild(el("td", null, c)); }); tb.appendChild(tr); });
+      t.appendChild(tb); box.appendChild(t);
+    },
+    tree: function (b, box) {
+      var vetev = function (polozky) {
+        var ul = el("ul");
+        polozky.forEach(function (x) {
+          var li = el("li"); li.appendChild(el("span", "jmeno", x.name));
+          if (x.note) li.appendChild(el("span", "pozn", x.note));
+          if (x.children && x.children.length) li.appendChild(vetev(x.children));
+          ul.appendChild(li);
+        });
+        return ul;
+      };
+      var u = vetev(b.items); u.className = "strom"; box.appendChild(u);
+    },
+    mermaid: function (b, box) {
+      var g = parseMermaid(b.text);
+      if (!g) { BLOKY.code({ text: b.text, label: "diagram (mermaid)" }, box); return; }
+      box.classList.add("graf"); box.appendChild(nakresli(g));
+    }
+  };
+
+  // Rozložení grafu: vrstva = nejdelší cesta od začátku; LR = vrstvy ve sloupcích, TD = v řádcích.
+  var cisloGrafu = 0;
+  function zalom(text, max) {
+    var slova = String(text).split(/\s+/), radky = [""];
+    slova.forEach(function (s) { var r = radky[radky.length - 1]; if (r && (r + " " + s).length > max) radky.push(s); else radky[radky.length - 1] = r ? r + " " + s : s; });
+    return radky.slice(0, 3);
+  }
+  function nakresli(g) {
+    var NS = "http://www.w3.org/2000/svg", vrstva = {}, n = g.uzly.length;
+    // Hrany, které uzavírají cyklus (DFS na zásobníku), se do vrstev nepočítají — jinak vrstvy ujedou.
+    var stav = {}, zpetne = {}, ven = {};
+    g.hrany.forEach(function (h, i) { (ven[h.z] = ven[h.z] || []).push(i); });
+    (function dfs() {
+      var navstiv = function (id) {
+        stav[id] = 1;
+        (ven[id] || []).forEach(function (i) { var c = g.hrany[i].do; if (stav[c] === 1) zpetne[i] = true; else if (!stav[c]) navstiv(c); });
+        stav[id] = 2;
+      };
+      g.uzly.forEach(function (u) { if (!stav[u.id]) navstiv(u.id); });
+    })();
+    g.uzly.forEach(function (u) { vrstva[u.id] = 0; });
+    for (var k = 0; k < n; k++) g.hrany.forEach(function (h, i) { if (!zpetne[i] && vrstva[h.do] < vrstva[h.z] + 1) vrstva[h.do] = vrstva[h.z] + 1; });
+    var vrstvy = [];
+    g.uzly.forEach(function (u) {
+      var r = zalom(u.label, 22);
+      u.radky = r; u.w = Math.max(90, Math.min(220, Math.max.apply(null, r.map(function (x) { return x.length; })) * 8 + 32)); u.h = 22 + r.length * 17;
+      (vrstvy[vrstva[u.id]] = vrstvy[vrstva[u.id]] || []).push(u);
+    });
+    var LR = g.smer === "LR", MEZERA_V = 70, MEZERA = 22, pozice = {}, sirka = 0, vyska = 0;
+    var rozmer = vrstvy.map(function (v) {
+      return LR ? { hlavni: Math.max.apply(null, v.map(function (u) { return u.w; })), vedlejsi: v.reduce(function (a, u) { return a + u.h; }, 0) + MEZERA * (v.length - 1) }
+                : { hlavni: Math.max.apply(null, v.map(function (u) { return u.h; })), vedlejsi: v.reduce(function (a, u) { return a + u.w; }, 0) + MEZERA * (v.length - 1) };
+    });
+    var maxVedlejsi = Math.max.apply(null, rozmer.map(function (r) { return r.vedlejsi; }));
+    var hlavniPos = 0;
+    vrstvy.forEach(function (v, i) {
+      var vedlejsiPos = (maxVedlejsi - rozmer[i].vedlejsi) / 2;
+      v.forEach(function (u) {
+        if (LR) { pozice[u.id] = { x: hlavniPos + (rozmer[i].hlavni - u.w) / 2, y: vedlejsiPos, u: u }; vedlejsiPos += u.h + MEZERA; }
+        else { pozice[u.id] = { x: vedlejsiPos, y: hlavniPos + (rozmer[i].hlavni - u.h) / 2, u: u }; vedlejsiPos += u.w + MEZERA; }
+      });
+      hlavniPos += rozmer[i].hlavni + MEZERA_V;
+    });
+    sirka = LR ? hlavniPos - MEZERA_V : maxVedlejsi; vyska = LR ? maxVedlejsi : hlavniPos - MEZERA_V;
+    var svg = document.createElementNS(NS, "svg"), idHrotu = "hrot-" + (++cisloGrafu);
+    svg.setAttribute("viewBox", "-4 -4 " + (sirka + 8) + " " + (vyska + 8));
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Diagram: " + g.uzly.map(function (u) { return u.label; }).join(", "));
+    var defs = document.createElementNS(NS, "defs"), mk = document.createElementNS(NS, "marker");
+    [["id", idHrotu], ["viewBox", "0 0 10 10"], ["refX", "9"], ["refY", "5"], ["markerWidth", "7"], ["markerHeight", "7"], ["orient", "auto-start-reverse"]].forEach(function (a) { mk.setAttribute(a[0], a[1]); });
+    var hrot = document.createElementNS(NS, "path"); hrot.setAttribute("d", "M0,0 L10,5 L0,10 z"); hrot.setAttribute("class", "sipka-hrot");
+    mk.appendChild(hrot); defs.appendChild(mk); svg.appendChild(defs);
+    g.hrany.forEach(function (h) {
+      var a = pozice[h.z], b = pozice[h.do];
+      // Zpětná hrana (do stejné nebo dřívější vrstvy): z horní/levé strany zdroje do spodní/pravé cíle,
+      // posunutá stranou, ať nekříží dopřednou hranu opačným směrem.
+      var zpet = vrstva[h.do] <= vrstva[h.z], P = 16, x1, y1, x2, y2, c;
+      if (!zpet) {
+        x1 = LR ? a.x + a.u.w : a.x + a.u.w / 2; y1 = LR ? a.y + a.u.h / 2 : a.y + a.u.h;
+        x2 = LR ? b.x : b.x + b.u.w / 2; y2 = LR ? b.y + b.u.h / 2 : b.y;
+        c = LR ? "M" + x1 + "," + y1 + " C" + (x1 + 30) + "," + y1 + " " + (x2 - 30) + "," + y2 + " " + x2 + "," + y2
+               : "M" + x1 + "," + y1 + " C" + x1 + "," + (y1 + 30) + " " + x2 + "," + (y2 - 30) + " " + x2 + "," + y2;
+      } else {
+        x1 = LR ? a.x : a.x + a.u.w / 2 + P; y1 = LR ? a.y + a.u.h / 2 + P / 2 : a.y;
+        x2 = LR ? b.x + b.u.w : b.x + b.u.w / 2 + P; y2 = LR ? b.y + b.u.h / 2 + P / 2 : b.y + b.u.h;
+        c = LR ? "M" + x1 + "," + y1 + " C" + (x1 - 30) + "," + (y1 + 20) + " " + (x2 + 30) + "," + (y2 + 20) + " " + x2 + "," + y2
+               : "M" + x1 + "," + y1 + " C" + (x1 + 20) + "," + (y1 - 30) + " " + (x2 + 20) + "," + (y2 + 30) + " " + x2 + "," + y2;
+      }
+      var cara = document.createElementNS(NS, "path");
+      cara.setAttribute("d", c); cara.setAttribute("class", "hrana" + (h.carkovana ? " carkovana" : ""));
+      cara.setAttribute("marker-end", "url(#" + idHrotu + ")"); svg.appendChild(cara);
+      if (h.label) {
+        var t = document.createElementNS(NS, "text"); t.setAttribute("class", "popisek");
+        t.setAttribute("x", (x1 + x2) / 2); t.setAttribute("y", (y1 + y2) / 2 - 6); t.setAttribute("text-anchor", "middle");
+        t.textContent = h.label; svg.appendChild(t);
+      }
+    });
+    Object.keys(pozice).forEach(function (id) {
+      var p = pozice[id], u = p.u, sk = document.createElementNS(NS, "g"); sk.setAttribute("class", "uzel");
+      var tvar;
+      if (u.tvar === "kosoctverec") {
+        tvar = document.createElementNS(NS, "polygon");
+        tvar.setAttribute("points", [[p.x + u.w / 2, p.y], [p.x + u.w, p.y + u.h / 2], [p.x + u.w / 2, p.y + u.h], [p.x, p.y + u.h / 2]].map(function (b) { return b.join(","); }).join(" "));
+      } else {
+        tvar = document.createElementNS(NS, "rect");
+        tvar.setAttribute("x", p.x); tvar.setAttribute("y", p.y); tvar.setAttribute("width", u.w); tvar.setAttribute("height", u.h);
+        tvar.setAttribute("rx", u.tvar === "kulaty" ? u.h / 2 : 8);
+      }
+      sk.appendChild(tvar);
+      var text = document.createElementNS(NS, "text"); text.setAttribute("text-anchor", "middle");
+      u.radky.forEach(function (r, i) {
+        var ts = document.createElementNS(NS, "tspan"); ts.setAttribute("x", p.x + u.w / 2);
+        ts.setAttribute("y", p.y + u.h / 2 + (i - (u.radky.length - 1) / 2) * 17 + 5); ts.textContent = r; text.appendChild(ts);
+      });
+      sk.appendChild(text); svg.appendChild(sk);
+    });
+    return svg;
+  }
+
+  var slidy = rozdelNaSlidy(data), main = document.getElementById("slidy"), cisloSekce = 0, minula = null;
+  var uzly = slidy.map(function (s) {
+    var sl = el("section", "slide");
+    if (s.typ === "titul") {
+      sl.classList.add("titul");
+      sl.appendChild(el("div", "kicker", "AI deep dive · mastermind"));
+      sl.appendChild(el("h1", null, meta.name || ""));
+      if (meta.role) sl.appendChild(el("div", "role", meta.role));
+      if (meta.tools && meta.tools.length) { var c = el("div", "cipy"); c.style.marginTop = "20px"; meta.tools.forEach(function (t) { c.appendChild(el("span", "cip", t)); }); sl.appendChild(c); }
+      if (meta.sentence) sl.appendChild(el("p", "veta", meta.sentence));
+    } else if (s.typ === "sekce") {
+      if (s.sekce !== minula) { cisloSekce++; minula = s.sekce; }
+      sl.appendChild(el("div", "kicker", String(cisloSekce).padStart(2, "0")));
+      sl.appendChild(el("h2", null, s.sekce.title || ""));
+      if (s.sekce.lead) sl.appendChild(el("p", "lead", s.sekce.lead));
+      var w = el("div", "bloky");
+      s.bloky.forEach(function (b) {
+        var box = el("div", "blok" + (b.type === "mermaid" || b.type === "table" ? " velky" : ""));
+        if (b.title) box.appendChild(el("div", "blok-nadpis", b.title));
+        BLOKY[b.type](b, box); w.appendChild(box);
+      });
+      sl.appendChild(w);
+    } else {
+      var z = data.closing || {};
+      sl.classList.add("zaver");
+      sl.appendChild(el("div", "kicker", "Na závěr"));
+      sl.appendChild(el("h2", null, "Pojďme to probrat"));
+      var w2 = el("div", "bloky");
+      [["S čím chci poradit", z.ask], ["Co si odnést", z.takeaways]].forEach(function (p) {
+        if (!p[1] || !p[1].length) return;
+        var box = el("div", "blok"); box.appendChild(el("h3", null, p[0]));
+        var ul = el("ul"); p[1].forEach(function (x) { ul.appendChild(el("li", null, x)); }); box.appendChild(ul); w2.appendChild(box);
+      });
+      sl.appendChild(w2);
+    }
+    main.appendChild(sl);
+    return sl;
+  });
+
+  var i = 0;
+  function ukaz(n) {
+    i = Math.max(0, Math.min(uzly.length - 1, n));
+    uzly.forEach(function (u, k) { u.classList.toggle("aktivni", k === i); });
+    document.getElementById("pocitadlo").textContent = (i + 1) + " / " + uzly.length;
+    document.getElementById("postup").style.width = ((i + 1) * 100 / uzly.length) + "%";
+    if (location.hash !== "#" + (i + 1)) history.replaceState(null, "", "#" + (i + 1));
+  }
+  document.addEventListener("keydown", function (e) {
+    if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].indexOf(e.key) >= 0) { e.preventDefault(); ukaz(i + 1); }
+    else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].indexOf(e.key) >= 0) { e.preventDefault(); ukaz(i - 1); }
+    else if (e.key === "Home") ukaz(0);
+    else if (e.key === "End") ukaz(uzly.length - 1);
+  });
+  document.getElementById("dal").onclick = function () { ukaz(i + 1); };
+  document.getElementById("zpet").onclick = function () { ukaz(i - 1); };
+  main.addEventListener("click", function (e) {
+    if (String(window.getSelection()) || e.target.closest("button")) return;
+    ukaz(e.clientX > window.innerWidth / 3 ? i + 1 : i - 1);
+  });
+  window.addEventListener("hashchange", function () { ukaz((parseInt(location.hash.slice(1), 10) || 1) - 1); });
+  ukaz((parseInt(location.hash.slice(1), 10) || 1) - 1);
+})();
+</script>
+</body>
+</html>
