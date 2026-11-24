@@ -1,7 +1,7 @@
-# Plugin Playground · AI Bootcamp
+# Plugin Marketing · AI BOOTCAMP 2026
 
 Sdílené místo pro **pluginy, skilly, příkazy a instrukce**, které si lidé dávají do svých
-AI nástrojů. Vzniklo jako komunitní kontext ke konferenci **AI BOOTCAMP**: co ti funguje,
+AI nástrojů. Vzniklo jako komunitní kontext ke konferenci **AI BOOTCAMP Marketingová edice 2026**: co ti funguje,
 to sem dej, ať si to ostatní můžou vzít a rovnou použít.
 
 ## Pluginy
