@@ -1,10 +1,13 @@
 # ai-bootcamp-prezentace
 
 Skill, který z tvého AI setupu udělá jeden slide pro AI BOOTCAMP („jaký mám AI stack a v čem jedu“)
-a po tvém souhlasu ho pošle do attendee app, odkud se promítá. Stav: **draft** (neotestovaný na
-účastnících). Zadání pro API a web: [`docs/website-prezentation/`](../../docs/website-prezentation/README.md).
+a po tvém souhlasu ho pošle do attendee app, odkud se promítá. Stav: **draft, vázaný na akci**
+AI BOOTCAMP 11/2026 — odesílání funguje jen s osobním odkazem z attendee app. Bez odkazu skill
+slide uloží jako JSON (`~/ai-bootcamp-slide.json`), takže se dá použít i mimo akci.
+Zadání pro API a web: [`docs/website-prezentation/`](../../docs/website-prezentation/README.md).
 
-**Vyzkoušeno:** sběr dat (`scripts/sber.mjs`) na macOS s Claude Code a Codexem. Celý tok se skillem zatím ne.
+**Vyzkoušeno:** celý tok proti lokální attendee app (Claude Code, macOS); sběr dat (`scripts/sber.mjs`)
+s Claude Code a Codexem.
 **Autor:** Martin Žatkovič.
 
 ## Instalace (vlož agentovi)

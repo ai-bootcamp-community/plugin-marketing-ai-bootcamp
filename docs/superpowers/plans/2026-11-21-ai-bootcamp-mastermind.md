@@ -172,7 +172,7 @@ Typy bloků a jejich pole: `text{text}`, `list{items:string[]}`, `chips{items:st
 
 ### Task 7: Test na Martinových datech (end-to-end)
 
-- [ ] **Step 1:** Nainstaluj skill lokálně (kopie složky skillu do `~/.claude-personal/skills/`), nová session, spusť `/ai-bootcamp-mastermind`.
+- [ ] **Step 1:** Nainstaluj skill lokálně (kopie složky skillu do složky skillů autorova profilu), nová session, spusť `/ai-bootcamp-mastermind`.
 - [ ] **Step 2:** Projdi celý tok s Martinem: setupy, sběr, křížová kontrola (počet konverzací proti `find`), přehled, redakce po sekcích, výroba, kontrola úniků, otevření.
-- [ ] **Step 3:** Zapiš nálezy (co agent minul, kde hádal, kde trvalo dlouho) do `~/ClaudeCodePersonal/workspace/stack-slide/README.md` sekce „Mastermind test“; opravy jako další commity.
+- [ ] **Step 3:** Zapiš nálezy (co agent minul, kde hádal, kde trvalo dlouho) do autorových poznámek k projektu; opravy jako další commity.
 - [ ] **Step 4:** Ověř, že `~/ai-bootcamp-mastermind/work/` je po běhu smazaný a `prezentace.html` projde `kontrola.mjs`.

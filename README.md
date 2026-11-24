@@ -4,6 +4,20 @@ Sdílené místo pro **pluginy, skilly, příkazy a instrukce**, které si lidé
 AI nástrojů. Vzniklo jako komunitní kontext ke konferenci **AI BOOTCAMP**: co ti funguje,
 to sem dej, ať si to ostatní můžou vzít a rovnou použít.
 
+## Pluginy
+
+| Plugin | Co dělá | Stav |
+| --- | --- | --- |
+| [`ai-bootcamp-mastermind`](plugins/ai-bootcamp-mastermind/) | Projde tvůj AI setup (skilly, pomocníci, napojení, druhý mozek, instrukce, paměť) a s tebou z něj udělá deep dive prezentaci v HTML pro mastermind. Nic neposílá. | draft, vyzkoušeno s Claude Code |
+| [`ai-bootcamp-prezentace`](plugins/ai-bootcamp-prezentace/) | Z AI setupu udělá jeden slide „jaký mám AI stack“. Vznikl pro AI BOOTCAMP 11/2026 (posílá do attendee app); bez odkazu uloží slide jako JSON. | draft, vázaný na akci |
+
+### Instalace přes agenta
+
+Každý plugin má krátký prompt, který vložíš do svého agenta (Claude Code, Codex, Hermes, Cursor…).
+Agent si z repa stáhne návod pro sebe (`install-*.md` / `INSTALL.md` ve složce pluginu), vybere
+správnou složku skillů pro svůj nástroj, ukáže, co kam kopíruje, a řekne, co skill dělá. Prompt
+najdeš v README pluginu. Pro ruční instalaci má každý plugin i `install.sh`.
+
 ## Podporované nástroje
 
 Cílem je, aby šel každý příspěvek použít aspoň v základních nástrojích:
@@ -24,9 +38,12 @@ nástrojově specifické obaly (Claude plugin, Cursor rule…) jsou nadstavba.
 ```
 plugin-playground/
 ├── README.md
+├── LICENSE
+├── docs/                          # zadání a „jak to vzniklo“ (design, plány)
 └── plugins/
     └── <nazev-pluginu>/
         ├── README.md              # co to dělá, pro koho, jak nainstalovat (povinné)
+        ├── install-<plugin>.md    # volitelně: návod pro agenta (instalace promptem)
         ├── skills/
         │   └── <nazev-skillu>/
         │       └── SKILL.md       # přenositelné jádro
@@ -74,4 +91,4 @@ svého nástroje a pošli opravu.
 
 ## Licence
 
-Pokud plugin neuvádí jinak, příspěvky jsou sdílené pod licencí MIT.
+Pokud plugin neuvádí jinak, příspěvky jsou sdílené pod licencí MIT ([`LICENSE`](LICENSE)).
