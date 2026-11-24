@@ -171,7 +171,7 @@ a známé tvary tokenů (`sk-`, `ghp_`, `glpat-`, `xox`) — druhá pojistka za 
 
 ## Předpoklady a rizika
 
-- **Repo `plugin-playground` musí být veřejné** nejpozději v pátek ráno, jinak instalace z GitHubu
+- **Repo `plugin-marketing-ai-bootcamp` musí být veřejné** nejpozději v pátek ráno, jinak instalace z GitHubu
   nebude fungovat. (Splněno: repo je veřejné.)
 - Attendee app je sama „připravená k ověření a prvnímu nasazení“ — tahle funkce se přidává těsně
   před ostrým startem. Pokud by ohrozila hlavní appku, vydat ji odděleně (feature flag) nebo vynechat.

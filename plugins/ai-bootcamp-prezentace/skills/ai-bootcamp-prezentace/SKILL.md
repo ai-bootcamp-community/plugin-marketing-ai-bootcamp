@@ -9,7 +9,7 @@ Z nastavení účastníka vytvoříš jeden slide „jaký mám AI setup a v če
 ho pošleš do attendee app (nebo uložíš jako JSON k ručnímu nahrání). Publikum jsou marketéři:
 slide mluví o tom, **na co** člověk AI používá a **co má nastavené**, ne o technických detailech.
 
-Formát dat: `docs/website-prezentation/README.md` v repu `ai-bootcamp-community/plugin-playground`
+Formát dat: `docs/website-prezentation/README.md` v repu `ai-bootcamp-community/plugin-marketing-ai-bootcamp`
 (tabulka „Datový formát slidu (v1)“). Komunikuj česky.
 
 ## Postup

@@ -16,7 +16,7 @@ Vlož do svého agenta (Claude Code, Codex, Hermes, Cursor…):
 
 ```text
 Nainstaluj mi skill ai-bootcamp-prezentace z repa
-https://github.com/ai-bootcamp-community/plugin-playground.
+https://github.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp.
 Postupuj podle plugins/ai-bootcamp-prezentace/INSTALL.md v tom repu.
 ```
 
@@ -26,7 +26,7 @@ ukáže, co kam kopíruje, přečte skripty a řekne ti, co dělají. Nic nespou
 **Bez agenta, jedním příkazem** (Claude Code všech profilů, Codex, Hermes a `~/.agents/skills`):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ai-bootcamp-community/plugin-playground/main/plugins/ai-bootcamp-prezentace/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp/main/plugins/ai-bootcamp-prezentace/install.sh | sh
 ```
 
 Přečti si ho předem: [`install.sh`](install.sh).
@@ -47,7 +47,7 @@ Přečti si ho předem: [`install.sh`](install.sh).
 
 Vlož do ChatGPT: „Vyptej se mě na můj AI setup (nástroje, na co AI používám, napojení, co mám
 nastavené, kolik s AI pracuju) a vytvoř JSON podle formátu z
-https://github.com/ai-bootcamp-community/plugin-playground/blob/main/docs/website-prezentation/priklad-slide.json.
+https://github.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp/blob/main/docs/website-prezentation/priklad-slide.json.
 Nevkládej URL, e-maily ani interní názvy.“ Výsledek nahraj na stránce **Můj slide**.
 
 ## Známé limity (draft)

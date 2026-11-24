@@ -15,7 +15,7 @@ Vlož do svého agenta (Claude Code, Codex, Hermes, Cursor…):
 
 ```text
 Nainstaluj mi skill ai-bootcamp-mastermind z repa
-https://github.com/ai-bootcamp-community/plugin-playground.
+https://github.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp.
 Postupuj podle plugins/ai-bootcamp-mastermind/install-mastermind.md v tom repu.
 ```
 
@@ -25,7 +25,7 @@ co kam kopíruje, a řekne ti, co skill dělá.
 **Bez agenta, jedním příkazem** (Claude Code všech profilů, Codex, Hermes a `~/.agents/skills`):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/ai-bootcamp-community/plugin-playground/main/plugins/ai-bootcamp-mastermind/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp/main/plugins/ai-bootcamp-mastermind/install.sh | sh
 ```
 
 ## Použití
