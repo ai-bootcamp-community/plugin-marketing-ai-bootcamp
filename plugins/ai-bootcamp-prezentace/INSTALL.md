@@ -3,7 +3,7 @@
 Tohle čte AI agent, kterého účastník požádal o instalaci (Claude Code, Codex, Hermes, Cursor…).
 Komunikuj česky. Instalace jen kopíruje soubory: nic nespouštěj, nic neposílej.
 
-**Zdroj:** repo https://github.com/ai-bootcamp-community/plugin-playground, větev `main`,
+**Zdroj:** repo https://github.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp, větev `main`,
 složka `plugins/ai-bootcamp-prezentace/skills/ai-bootcamp-prezentace/`. Skill tvoří tyhle soubory:
 
 ```
@@ -13,7 +13,7 @@ scripts/over.mjs
 reference/zdroje.md
 ```
 
-Raw adresa: `https://raw.githubusercontent.com/ai-bootcamp-community/plugin-playground/main/plugins/ai-bootcamp-prezentace/skills/ai-bootcamp-prezentace/<soubor>`
+Raw adresa: `https://raw.githubusercontent.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp/main/plugins/ai-bootcamp-prezentace/skills/ai-bootcamp-prezentace/<soubor>`
 
 ## Postup
 

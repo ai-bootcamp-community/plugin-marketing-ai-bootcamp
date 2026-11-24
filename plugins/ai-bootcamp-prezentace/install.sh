@@ -3,7 +3,7 @@
 # Co dělá: stáhne SKILL.md, scripts/sber.mjs, scripts/over.mjs a reference/zdroje.md do složek skillů (Claude Code, Codex, ~/.agents).
 # Nic nespouští, nic neposílá. Spuštění: curl -fsSL <raw URL tohoto souboru> | sh
 set -eu
-RAW="https://raw.githubusercontent.com/ai-bootcamp-community/plugin-playground/main/plugins/ai-bootcamp-prezentace/skills/ai-bootcamp-prezentace"
+RAW="https://raw.githubusercontent.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp/main/plugins/ai-bootcamp-prezentace/skills/ai-bootcamp-prezentace"
 NAME="ai-bootcamp-prezentace"
 
 targets="$HOME/.claude/skills"

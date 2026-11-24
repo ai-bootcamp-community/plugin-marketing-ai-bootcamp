@@ -4,7 +4,7 @@
 # nástrojů, které na počítači už jsou. Nic nespouští, nic neposílá.
 # Spuštění: curl -fsSL <raw URL tohoto souboru> | sh
 set -eu
-RAW="https://raw.githubusercontent.com/ai-bootcamp-community/plugin-playground/main/plugins/ai-bootcamp-mastermind/skills/ai-bootcamp-mastermind"
+RAW="https://raw.githubusercontent.com/ai-bootcamp-community/plugin-marketing-ai-bootcamp/main/plugins/ai-bootcamp-mastermind/skills/ai-bootcamp-mastermind"
 NAME="ai-bootcamp-mastermind"
 FILES="SKILL.md reference/temata.md reference/setupy.md reference/mereni.md reference/redakce.md examples/README.md examples/cc-konverzace.mjs examples/cc-nastaveni.mjs scripts/kontrola.mjs scripts/vloz.mjs templates/prezentace.html"
 

@@ -36,7 +36,7 @@ nástrojově specifické obaly (Claude plugin, Cursor rule…) jsou nadstavba.
 ## Struktura
 
 ```
-plugin-playground/
+plugin-marketing-ai-bootcamp/
 ├── README.md
 ├── LICENSE
 ├── docs/                          # zadání a „jak to vzniklo“ (design, plány)
