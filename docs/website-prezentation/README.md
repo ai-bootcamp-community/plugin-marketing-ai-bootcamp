@@ -1,9 +1,12 @@
 # Prezentace AI stacku účastníků · produktové zadání pro API a web
 
+> **Archiv akce.** Zadání vzniklo pro AI BOOTCAMP Marketingová edice (20.–22. 11. 2026, Tábor)
+> a zůstává tu jako záznam, jak funkce vznikla. Termíny a rizika níže platily před akcí.
+
 Stav: návrh k odsouhlasení (2026-11-19, formáty Přehled + Hero 2026-11-20) · Akce: AI BOOTCAMP Marketingová edice, 20.–22. 11. 2026, Tábor
 Kde se staví: API a web v `ai-bootcamp-community/attendee-app` (app.aibootcamp.cz),
 skill v tomhle repu (`plugins/ai-bootcamp-prezentace/`).
-Klikací prototyp vzhledu: lokálně u Martina (`ClaudeCodePersonal/workspace/stack-slide/prototyp.html`).
+Klikací prototyp vzhledu: lokálně u autora (není součástí repa).
 
 ## Proč
 
@@ -169,7 +172,7 @@ a známé tvary tokenů (`sk-`, `ghp_`, `glpat-`, `xox`) — druhá pojistka za 
 ## Předpoklady a rizika
 
 - **Repo `plugin-playground` musí být veřejné** nejpozději v pátek ráno, jinak instalace z GitHubu
-  nebude fungovat (teď je soukromé).
+  nebude fungovat. (Splněno: repo je veřejné.)
 - Attendee app je sama „připravená k ověření a prvnímu nasazení“ — tahle funkce se přidává těsně
   před ostrým startem. Pokud by ohrozila hlavní appku, vydat ji odděleně (feature flag) nebo vynechat.
 - Počty z Codexu a dalších nástrojů jsou méně přesné než z Claude Code (jiná struktura logů).
