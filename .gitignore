@@ -1,0 +1,5 @@
+# pracovní soubory agentů (brainstorming, plány v běhu)
+.superpowers/
+.claude/
+.DS_Store
+node_modules/
